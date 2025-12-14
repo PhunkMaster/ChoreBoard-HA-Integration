@@ -40,7 +40,11 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             secret_key=entry.data[CONF_SECRET_KEY],
             session=async_get_clientsession(hass),
         )
-        self.monitored_users: list[str] = entry.data.get(CONF_MONITORED_USERS, [])
+
+        # Get monitored users from options (if set) or fall back to data
+        self.monitored_users: list[str] = entry.options.get(
+            CONF_MONITORED_USERS, entry.data.get(CONF_MONITORED_USERS, [])
+        )
 
         # Handle case where monitored_users might be a comma-separated string
         if isinstance(self.monitored_users, str):
