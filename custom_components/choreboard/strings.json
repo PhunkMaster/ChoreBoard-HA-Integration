@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up ChoreBoard",
+        "description": "Enter your ChoreBoard credentials. The username and SECRET_KEY will be used to generate authentication tokens automatically.",
+        "data": {
+          "username": "ChoreBoard Username",
+          "secret_key": "Django SECRET_KEY",
+          "url": "ChoreBoard URL"
+        },
+        "data_description": {
+          "username": "Your ChoreBoard username",
+          "secret_key": "The Django SECRET_KEY from your ChoreBoard backend settings",
+          "url": "Base URL of your ChoreBoard instance (e.g., http://localhost:8000)"
+        }
+      },
+      "select_users": {
+        "title": "Select Users to Monitor",
+        "description": "Choose which ChoreBoard users to create 'My Chores' sensors for. System-wide sensors (Outstanding, Late, Leaderboard) will be created automatically.",
+        "data": {
+          "monitored_users": "Users to Monitor"
+        },
+        "data_description": {
+          "monitored_users": "Select one or more users. A 'My Chores' sensor will be created for each."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to ChoreBoard API. Check the URL and network connectivity.",
+      "invalid_auth": "Authentication failed. Verify your username and SECRET_KEY are correct.",
+      "no_users_selected": "Please select at least one user to monitor.",
+      "unknown": "Unexpected error occurred. Check the logs for details."
+    },
+    "abort": {
+      "already_configured": "This ChoreBoard instance and username combination is already configured."
+    }
+  },
+  "services": {
+    "mark_complete": {
+      "name": "Mark chore complete",
+      "description": "Mark a chore as completed, optionally with helper credits",
+      "fields": {
+        "chore_id": {
+          "name": "Chore Instance ID",
+          "description": "The ID of the chore instance to complete"
+        },
+        "helpers": {
+          "name": "Helper IDs",
+          "description": "Optional list of user IDs who helped with the chore"
+        }
+      }
+    },
+    "claim_chore": {
+      "name": "Claim chore",
+      "description": "Claim a pool chore for the authenticated user",
+      "fields": {
+        "chore_id": {
+          "name": "Chore Instance ID",
+          "description": "The ID of the pool chore instance to claim"
+        }
+      }
+    },
+    "undo_completion": {
+      "name": "Undo completion",
+      "description": "Undo a chore completion (admin only)",
+      "fields": {
+        "chore_id": {
+          "name": "Completion ID",
+          "description": "The ID of the completion to undo"
+        }
+      }
+    }
+  }
+}

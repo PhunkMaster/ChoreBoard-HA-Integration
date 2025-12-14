@@ -1,0 +1,17 @@
+# Development dependencies for ChoreBoard Home Assistant Integration
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-homeassistant-custom-component>=0.13.0
+
+# Linting and type checking
+ruff>=0.1.0
+mypy>=1.7.0
+
+# Pre-commit hooks
+pre-commit>=3.5.0
+
+# Home Assistant dependencies (for development)
+homeassistant>=2024.1.0
