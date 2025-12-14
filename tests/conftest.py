@@ -30,7 +30,10 @@ def mock_choreboard_api():
                         "complete_later": False,
                     },
                     "status": "ASSIGNED",
-                    "assigned_to": {"username": "testuser", "display_name": "Test User"},
+                    "assigned_to": {
+                        "username": "testuser",
+                        "display_name": "Test User",
+                    },
                     "due_at": "2025-12-15T10:00:00Z",
                     "is_overdue": False,
                     "points_value": 10,
