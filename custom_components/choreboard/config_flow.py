@@ -42,7 +42,7 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._url: str | None = None
         self._available_users: list[dict[str, str]] = []
 
-    async def async_step_user(
+    async def async_step_user(  # noqa: C901
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step - collect credentials."""

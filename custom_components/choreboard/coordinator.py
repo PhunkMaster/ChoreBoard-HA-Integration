@@ -53,7 +53,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901
         """Fetch data from ChoreBoard API.
 
         Returns a dictionary with the following structure:
