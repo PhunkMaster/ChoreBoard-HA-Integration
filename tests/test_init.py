@@ -7,7 +7,13 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.choreboard.const import CONF_API_KEY, CONF_URL, DOMAIN
+from custom_components.choreboard.const import (
+    CONF_MONITORED_USERS,
+    CONF_SECRET_KEY,
+    CONF_URL,
+    CONF_USERNAME,
+    DOMAIN,
+)
 
 
 @pytest.mark.asyncio
@@ -16,8 +22,10 @@ async def test_setup_entry(hass, mock_choreboard_api):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_KEY: "test_api_key",
-            CONF_URL: "https://api.choreboard.com",
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
         },
     )
     entry.add_to_hass(hass)
@@ -37,8 +45,10 @@ async def test_unload_entry(hass, mock_choreboard_api):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_API_KEY: "test_api_key",
-            CONF_URL: "https://api.choreboard.com",
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
         },
     )
     entry.add_to_hass(hass)

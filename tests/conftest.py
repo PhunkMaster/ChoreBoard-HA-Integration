@@ -20,23 +20,75 @@ def mock_choreboard_api():
         "custom_components.choreboard.coordinator.ChoreboardCoordinator._async_update_data"
     ) as mock_update:
         mock_update.return_value = {
-            "test_chore_1": {
-                "id": "test_chore_1",
-                "name": "Test Chore 1",
-                "status": "pending",
-                "assignee": "Test User",
-                "due_date": "2025-12-15",
-                "points": 10,
-                "description": "Test chore description",
-            },
-            "test_chore_2": {
-                "id": "test_chore_2",
-                "name": "Test Chore 2",
-                "status": "completed",
-                "assignee": "Test User 2",
-                "due_date": "2025-12-14",
-                "points": 5,
-                "description": "Another test chore",
+            "outstanding_chores": [
+                {
+                    "id": 1,
+                    "chore": {
+                        "name": "Test Chore 1",
+                        "description": "Test chore description",
+                        "points": 10,
+                        "complete_later": False,
+                    },
+                    "status": "ASSIGNED",
+                    "assigned_to": {"username": "testuser", "display_name": "Test User"},
+                    "due_at": "2025-12-15T10:00:00Z",
+                    "is_overdue": False,
+                    "points_value": 10,
+                }
+            ],
+            "late_chores": [
+                {
+                    "id": 2,
+                    "chore": {
+                        "name": "Late Chore",
+                        "description": "Overdue chore",
+                        "points": 5,
+                        "complete_later": False,
+                    },
+                    "status": "ASSIGNED",
+                    "assigned_to": {
+                        "username": "testuser",
+                        "display_name": "Test User",
+                    },
+                    "due_at": "2025-12-13T10:00:00Z",
+                    "is_overdue": True,
+                    "points_value": 5,
+                }
+            ],
+            "leaderboard_weekly": [
+                {
+                    "user": {"username": "testuser", "display_name": "Test User"},
+                    "points": 100,
+                    "rank": 1,
+                }
+            ],
+            "leaderboard_alltime": [
+                {
+                    "user": {"username": "testuser", "display_name": "Test User"},
+                    "points": 500,
+                    "rank": 1,
+                }
+            ],
+            "my_chores": {
+                "testuser": [
+                    {
+                        "id": 1,
+                        "chore": {
+                            "name": "Test Chore 1",
+                            "description": "Test chore description",
+                            "points": 10,
+                            "complete_later": False,
+                        },
+                        "status": "ASSIGNED",
+                        "assigned_to": {
+                            "username": "testuser",
+                            "display_name": "Test User",
+                        },
+                        "due_at": "2025-12-15T10:00:00Z",
+                        "is_overdue": False,
+                        "points_value": 10,
+                    }
+                ]
             },
         }
         yield mock_update
