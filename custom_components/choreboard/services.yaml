@@ -1,0 +1,48 @@
+mark_complete:
+  name: Mark chore complete
+  description: Mark a chore as completed, optionally with helper credits
+  fields:
+    chore_id:
+      name: Chore Instance ID
+      description: The ID of the chore instance to complete
+      required: true
+      example: 42
+      selector:
+        number:
+          min: 1
+          mode: box
+    helpers:
+      name: Helper IDs
+      description: Optional list of user IDs who helped with the chore
+      required: false
+      example: [2, 3]
+      selector:
+        object:
+
+claim_chore:
+  name: Claim chore
+  description: Claim a pool chore for the authenticated user
+  fields:
+    chore_id:
+      name: Chore Instance ID
+      description: The ID of the pool chore instance to claim
+      required: true
+      example: 42
+      selector:
+        number:
+          min: 1
+          mode: box
+
+undo_completion:
+  name: Undo completion
+  description: Undo a chore completion (admin only)
+  fields:
+    chore_id:
+      name: Completion ID
+      description: The ID of the completion to undo
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
