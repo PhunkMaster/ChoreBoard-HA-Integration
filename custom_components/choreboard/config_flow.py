@@ -236,7 +236,7 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        super().__init__()
         self._available_users: list[dict[str, str]] = []
 
     async def async_step_init(  # noqa: C901

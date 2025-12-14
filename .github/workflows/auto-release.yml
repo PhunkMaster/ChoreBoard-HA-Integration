@@ -1,0 +1,139 @@
+name: Auto Release on Semver Branch Merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  auto-release:
+    name: Create Release from Semver Branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get merged branch name
+        id: branch
+        run: |
+          # Get the commit message which contains the merged branch name
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Extract branch name from merge commit message
+          # Format: "Merge pull request #X from user/branch" or "Merge branch 'branch' into main"
+          BRANCH_NAME=""
+
+          if [[ "$COMMIT_MSG" =~ Merge\ pull\ request\ #[0-9]+\ from\ [^/]+/([^ ]+) ]]; then
+            BRANCH_NAME="${BASH_REMATCH[1]}"
+          elif [[ "$COMMIT_MSG" =~ Merge\ branch\ \'([^\']+)\' ]]; then
+            BRANCH_NAME="${BASH_REMATCH[1]}"
+          fi
+
+          echo "Extracted branch name: $BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Check if branch is semver and create release
+        id: semver
+        run: |
+          BRANCH_NAME="${{ steps.branch.outputs.branch_name }}"
+
+          # Match semver patterns:
+          # - feature/1.2.3, bugfix/1.2.3, hotfix/1.2.3
+          # - release/1.2.3, v1.2.3
+          # - 1.2.3
+          if [[ "$BRANCH_NAME" =~ ^(feature|bugfix|hotfix|release)/v?([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?)$ ]]; then
+            VERSION="${BASH_REMATCH[2]}"
+          elif [[ "$BRANCH_NAME" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "Branch name '$BRANCH_NAME' does not match semver pattern"
+            echo "is_semver=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Detected version: $VERSION"
+          echo "is_semver=true" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        if: steps.semver.outputs.is_semver == 'true'
+        id: tag_check
+        run: |
+          TAG="${{ steps.semver.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag $TAG does not exist"
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate release notes
+        if: steps.semver.outputs.is_semver == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        id: notes
+        run: |
+          VERSION="${{ steps.semver.outputs.version }}"
+          TAG="${{ steps.semver.outputs.tag }}"
+
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "First release - getting all commits"
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            echo "Getting commits since $LAST_TAG"
+            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Create release notes
+          cat > release_notes.md << EOF
+          ## ChoreBoard Home Assistant Integration $VERSION
+
+          This release was automatically created from the merge of branch \`${{ steps.branch.outputs.branch_name }}\`.
+
+          ### Changes
+
+          $COMMITS
+
+          ### Installation
+
+          1. Download \`choreboard.zip\` from the assets below
+          2. Extract to your Home Assistant \`custom_components\` directory
+          3. Restart Home Assistant
+          4. Add the ChoreBoard integration via Settings → Devices & Services
+
+          ### Requirements
+
+          - Home Assistant 2024.1.0 or newer
+          - ChoreBoard backend API
+          EOF
+
+          echo "Release notes generated"
+
+      - name: Create GitHub Release
+        if: steps.semver.outputs.is_semver == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.semver.outputs.tag }}
+          release_name: Release ${{ steps.semver.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.semver.outputs.version, '-') }}
+
+      - name: Summary
+        if: steps.semver.outputs.is_semver == 'true'
+        run: |
+          if [[ "${{ steps.tag_check.outputs.tag_exists }}" == "true" ]]; then
+            echo "✅ Tag ${{ steps.semver.outputs.tag }} already exists - skipped release creation"
+          else
+            echo "✅ Created release ${{ steps.semver.outputs.tag }}"
+          fi
