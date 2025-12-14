@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -17,6 +15,7 @@ from custom_components.choreboard.const import (
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_setup_entry(hass, mock_choreboard_api):
     """Test successful setup of a config entry."""
     entry = MockConfigEntry(
@@ -40,6 +39,7 @@ async def test_setup_entry(hass, mock_choreboard_api):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_unload_entry(hass, mock_choreboard_api):
     """Test unloading a config entry."""
     entry = MockConfigEntry(
