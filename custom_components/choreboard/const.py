@@ -40,6 +40,7 @@ ATTR_ALL_TIME_POINTS = "all_time_points"
 
 # Sensor types
 SENSOR_TYPE_MY_CHORES = "my_chores"
+SENSOR_TYPE_MY_IMMEDIATE_CHORES = "my_immediate_chores"
 SENSOR_TYPE_OUTSTANDING = "outstanding"
 SENSOR_TYPE_LATE = "late"
 SENSOR_TYPE_LEADERBOARD_WEEKLY = "leaderboard_weekly"

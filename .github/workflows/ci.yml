@@ -77,9 +77,8 @@ jobs:
             echo "No tests directory found, skipping tests"
           fi
 
-      - name: Upload coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
+#      - name: Upload coverage to Codecov
+#        if: always()
+#        uses: codecov/codecov-action@v5
+#        with:
+#          fail_ci_if_error: false

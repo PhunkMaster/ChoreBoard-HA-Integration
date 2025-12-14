@@ -33,9 +33,12 @@ async def async_setup_entry(
     entities.append(ChoreboardLeaderboardSensor(coordinator, "weekly"))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "alltime"))
 
-    # Create per-user "My Chores" sensors
+    # Create per-user sensors
     for username in coordinator.monitored_users:
+        # "My Chores" - all chores for the user
         entities.append(ChoreboardMyChoresSensor(coordinator, username))
+        # "My Immediate Chores" - only chores not marked as "Complete Later"
+        entities.append(ChoreboardMyImmediateChoresSensor(coordinator, username))
 
     async_add_entities(entities)
 
@@ -191,6 +194,70 @@ class ChoreboardMyChoresSensor(CoordinatorEntity[ChoreboardCoordinator], SensorE
             "username": self._username,
             "chores": chore_list,
             "count": len(chores),
+        }
+
+
+class ChoreboardMyImmediateChoresSensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for a specific user's immediate chores (not marked as Complete Later)."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:clock-alert-outline"
+
+    def __init__(self, coordinator: ChoreboardCoordinator, username: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._username = username
+        self._attr_unique_id = f"{DOMAIN}_my_immediate_chores_{username}"
+        self._attr_name = f"{username} - My Immediate Chores"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of immediate chores for this user."""
+        my_chores = self.coordinator.data.get("my_chores", {})
+        chores = my_chores.get(self._username, [])
+        # Filter out chores marked as "complete_later"
+        immediate_chores = [
+            chore
+            for chore in chores
+            if not chore.get("chore", {}).get("complete_later", False)
+        ]
+        return len(immediate_chores)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        my_chores = self.coordinator.data.get("my_chores", {})
+        chores = my_chores.get(self._username, [])
+        # Filter out chores marked as "complete_later"
+        immediate_chores = [
+            chore
+            for chore in chores
+            if not chore.get("chore", {}).get("complete_later", False)
+        ]
+
+        chore_list = []
+        for chore in immediate_chores:
+            chore_info = {
+                "id": chore.get("id"),
+                "name": chore.get("chore", {}).get("name", "Unknown"),
+                "due_date": chore.get("due_at"),
+                "points": chore.get(
+                    "points_value", chore.get("chore", {}).get("points", 0)
+                ),
+                "is_overdue": chore.get("is_overdue", False),
+                "status": chore.get("status", "unknown"),
+                "complete_later": chore.get("chore", {}).get("complete_later", False),
+            }
+            chore_list.append(chore_info)
+
+        return {
+            "username": self._username,
+            "chores": chore_list,
+            "count": len(immediate_chores),
+            "total_chores": len(chores),
+            "complete_later_chores": len(chores) - len(immediate_chores),
         }
 
 
