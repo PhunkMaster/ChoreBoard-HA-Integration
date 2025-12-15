@@ -482,3 +482,186 @@ Legacy template entities are deprecated in Home Assistant 2025.12. Always inheri
 - [Testing Guide](https://developers.home-assistant.io/docs/development_testing/)
 - [HACS Documentation](https://www.hacs.xyz/docs/publish/integration/)
 - Always use semver branching
+
+## ChoreBoard-Specific Implementation
+
+### Current Features
+
+The integration provides comprehensive ChoreBoard functionality through multiple sensor types and services.
+
+### Sensors
+
+The integration creates the following sensors automatically:
+
+#### System-Wide Sensors
+
+1. **Outstanding Chores** (`sensor.choreboard_outstanding`)
+   - Icon: `mdi:clipboard-list-outline`
+   - Native value: Count of incomplete, non-overdue chores
+   - Attributes: List of chores with id, name, assignee, due_date, points, is_pool
+
+2. **Late Chores** (`sensor.choreboard_late`)
+   - Icon: `mdi:alert-circle-outline`
+   - Native value: Count of overdue chores
+   - Attributes: List of chores with id, name, assignee, due_date, points, is_overdue
+
+3. **Pool Chores** (`sensor.choreboard_pool`)
+   - Icon: `mdi:pool`
+   - Native value: Count of unassigned pool chores available for claiming
+   - Attributes: List of chores with id, name, due_date, points, description, status
+   - Pool chores are identified by `status="POOL"` or `is_pool=True` with no assignee
+
+4. **Leaderboard - Weekly** (`sensor.choreboard_leaderboard_weekly`)
+   - Icon: `mdi:trophy-outline`
+   - Native value: Count of users on weekly leaderboard
+   - Attributes: List of users with rank, username, display_name, points
+
+5. **Leaderboard - Alltime** (`sensor.choreboard_leaderboard_alltime`)
+   - Icon: `mdi:trophy-outline`
+   - Native value: Count of users on all-time leaderboard
+   - Attributes: List of users with rank, username, display_name, points
+
+#### Per-User Sensors
+
+For each monitored user (selected during config flow):
+
+1. **My Chores** (`sensor.choreboard_my_chores_{username}`)
+   - Icon: `mdi:account-check-outline`
+   - Native value: Count of all chores assigned to the user
+   - Attributes: username, list of chores with id, name, due_date, points, is_overdue, status
+
+2. **My Immediate Chores** (`sensor.choreboard_my_immediate_chores_{username}`)
+   - Icon: `mdi:clock-alert-outline`
+   - Native value: Count of chores NOT marked as "complete_later"
+   - Attributes: username, chores list, count, total_chores, complete_later_chores
+   - Filters out chores where `complete_later=True`
+
+### Services
+
+The integration provides three services for chore management:
+
+1. **choreboard.mark_complete**
+   - Marks a chore as completed
+   - Parameters: `chore_id` (required), `helpers` (optional list of helper user IDs)
+   - Triggers coordinator refresh after completion
+
+2. **choreboard.claim_chore**
+   - Claims a pool chore for the authenticated user
+   - Parameters: `chore_id` (required)
+   - Triggers coordinator refresh after claiming
+
+3. **choreboard.undo_completion**
+   - Undoes a chore completion (admin only)
+   - Parameters: `completion_id` (required)
+   - Triggers coordinator refresh after undo
+
+### Data Filtering Rules
+
+**Important**: The coordinator applies date filtering to chores:
+
+- **Only show chores due by today at 23:59:59**
+  - Future chores (due tomorrow or later) are filtered out
+  - Overdue chores (past dates) are included
+  - Today's chores are included
+
+- **Datetime Normalization**
+  - All datetime fields are formatted as `YYYY-MM-DD HH:MM`
+  - Seconds and microseconds are removed for cleaner display
+  - Datetimes are converted to local timezone
+
+Implementation: `coordinator.py`
+- `_is_due_today()`: Checks if chore is due by end of today
+- `_normalize_datetime()`: Formats datetimes without seconds
+- `_filter_chores_by_due_date()`: Applies both filtering and normalization
+
+### Configuration Flow
+
+The integration uses a two-step configuration flow:
+
+**Step 1: Authentication**
+- Username (ChoreBoard username)
+- Secret Key (Django SECRET_KEY for HMAC token generation)
+- URL (ChoreBoard backend URL, default: http://localhost:8000)
+
+**Step 2: User Selection**
+- Multi-select list of available ChoreBoard users
+- Users are discovered from leaderboard and chore assignments
+- Selected users get "My Chores" and "My Immediate Chores" sensors
+
+### API Authentication
+
+The integration uses HMAC-SHA256 authentication:
+
+**Token Format**: `username:timestamp:signature`
+
+Where:
+- `timestamp`: Integer Unix timestamp
+- `signature`: HMAC-SHA256 hex digest of `username:timestamp` using Django SECRET_KEY
+- Sent via header: `Authorization: Bearer {token}`
+
+**Token Caching**:
+- Tokens are cached for 23 hours (before 24h expiry)
+- Automatically regenerated on 401 responses
+- Implementation: `api_client.py`
+
+### API Endpoints
+
+Current endpoints used by the integration:
+
+- `GET /api/outstanding/` - Incomplete, non-overdue chores
+- `GET /api/late-chores/` - Overdue chores
+- `GET /api/my-chores/` - Chores for authenticated user
+- `GET /api/leaderboard/?type=weekly|alltime` - User rankings
+- `POST /api/claim/` - Claim a pool chore
+- `POST /api/complete/` - Mark chore as complete
+- `POST /api/undo/` - Undo a completion
+
+### Data Update Strategy
+
+- **Update Interval**: 5 minutes (defined in `DEFAULT_SCAN_INTERVAL`)
+- **Pattern**: DataUpdateCoordinator with single shared data fetch
+- **All sensors**: Subscribe to the same coordinator for efficient updates
+- **Error Handling**: Automatic retry with exponential backoff
+
+### Testing Requirements
+
+When adding new features:
+
+1. **Coordinator Tests** (`tests/test_coordinator.py`)
+   - Test data extraction and filtering logic
+   - Verify date filtering behavior
+   - Test pool chores extraction
+   - Mock API responses
+
+2. **Integration Tests** (`tests/test_init.py`)
+   - Test service handlers
+   - Verify coordinator setup
+   - Test unload behavior
+
+3. **Coverage Target**: >80% for all modified files
+
+### Development Notes
+
+**Local Backend**: The ChoreBoard backend is at `../ChoreBoard` for development
+
+When adding new features:
+1. Add/modify API endpoints in `../ChoreBoard` if needed
+2. Update `api_client.py` with new API methods
+3. Update `coordinator.py` to fetch and process data
+4. Create/update sensors in `sensor.py`
+5. Add tests for new functionality
+6. Update CLAUDE.md with feature documentation
+
+### Branching Strategy
+
+**Always use semantic versioning branches**:
+- `feature/X.Y.Z` - New features (minor version bump)
+- `bugfix/X.Y.Z` - Bug fixes (patch version bump)
+- `hotfix/X.Y.Z` - Critical fixes (patch version bump)
+
+Examples:
+- `feature/1.1.0` - Adding pool chores sensor
+- `bugfix/1.0.3` - Fixing date filtering
+- `bugfix/1.0.2` - Fixing options flow
+
+Auto-release workflow triggers on merge to main when branch matches semver pattern.
