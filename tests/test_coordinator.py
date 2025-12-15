@@ -20,7 +20,6 @@ from custom_components.choreboard.coordinator import ChoreboardCoordinator
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_today_date(hass):
     """Test _is_due_today returns True for chores due today."""
     entry = MockConfigEntry(
@@ -42,7 +41,6 @@ async def test_is_due_today_with_today_date(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_tomorrow_date(hass):
     """Test _is_due_today returns False for chores due tomorrow."""
     entry = MockConfigEntry(
@@ -64,7 +62,6 @@ async def test_is_due_today_with_tomorrow_date(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_past_date(hass):
     """Test _is_due_today returns True for chores due in the past."""
     entry = MockConfigEntry(
@@ -86,7 +83,6 @@ async def test_is_due_today_with_past_date(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_none(hass):
     """Test _is_due_today returns False for None."""
     entry = MockConfigEntry(
@@ -104,7 +100,6 @@ async def test_is_due_today_with_none(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_normalize_datetime_removes_seconds(hass):
     """Test _normalize_datetime removes seconds and microseconds."""
     entry = MockConfigEntry(
@@ -131,7 +126,6 @@ async def test_normalize_datetime_removes_seconds(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_normalize_datetime_with_none(hass):
     """Test _normalize_datetime returns None for None input."""
     entry = MockConfigEntry(
@@ -149,7 +143,6 @@ async def test_normalize_datetime_with_none(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_filter_chores_by_due_date(hass):
     """Test _filter_chores_by_due_date filters correctly."""
     entry = MockConfigEntry(
@@ -198,7 +191,6 @@ async def test_filter_chores_by_due_date(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_coordinator_filters_chores_on_update(hass, mock_choreboard_api):
     """Test that coordinator filters chores during data update."""
     entry = MockConfigEntry(
