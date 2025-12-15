@@ -198,6 +198,28 @@ class ChoreboardAPIClient:
         data = await self._request("GET", "/api/my-chores/")
         return data if isinstance(data, list) else []
 
+    async def get_users(self) -> list[dict[str, Any]]:
+        """Get all active, assignable users.
+
+        Returns:
+            List of user dictionaries with points and other data
+        """
+        data = await self._request("GET", "/api/users/")
+        return data if isinstance(data, list) else []
+
+    async def get_recent_completions(self, limit: int = 10) -> list[dict[str, Any]]:
+        """Get recent chore completions.
+
+        Args:
+            limit: Maximum number of completions to return (default: 10)
+
+        Returns:
+            List of completion dictionaries with chore and user data
+        """
+        params = {"limit": str(limit)}
+        data = await self._request("GET", "/api/completions/recent/", params=params)
+        return data if isinstance(data, list) else []
+
     async def get_leaderboard(
         self, leaderboard_type: str = "weekly"
     ) -> list[dict[str, Any]]:
@@ -213,30 +235,46 @@ class ChoreboardAPIClient:
         data = await self._request("GET", "/api/leaderboard/", params=params)
         return data if isinstance(data, list) else []
 
-    async def claim_chore(self, instance_id: int) -> dict[str, Any]:
+    async def get_chore_leaderboards(self) -> list[dict[str, Any]]:
+        """Get arcade mode leaderboards for all chores.
+
+        Returns:
+            List of chore leaderboard dictionaries with high scores
+        """
+        data = await self._request("GET", "/api/chore-leaderboards/")
+        return data if isinstance(data, list) else []
+
+    async def claim_chore(
+        self, instance_id: int, assign_to_user_id: int | None = None
+    ) -> dict[str, Any]:
         """Claim a pool chore.
 
         Args:
             instance_id: ID of the chore instance to claim
+            assign_to_user_id: Optional user ID to assign the chore to
 
         Returns:
             Updated chore data
         """
-        data = await self._request(
-            "POST", "/api/claim/", json_data={"instance_id": instance_id}
-        )
+        json_data: dict[str, Any] = {"instance_id": instance_id}
+        if assign_to_user_id is not None:
+            json_data["assign_to_user_id"] = assign_to_user_id
+
+        data = await self._request("POST", "/api/claim/", json_data=json_data)
         return data if isinstance(data, dict) else {}
 
     async def complete_chore(
         self,
         instance_id: int,
         helper_ids: list[int] | None = None,
+        completed_by_user_id: int | None = None,
     ) -> dict[str, Any]:
         """Mark a chore as complete.
 
         Args:
             instance_id: ID of the chore instance to complete
             helper_ids: Optional list of helper user IDs
+            completed_by_user_id: Optional user ID of who completed the chore
 
         Returns:
             Updated chore data
@@ -244,6 +282,8 @@ class ChoreboardAPIClient:
         json_data: dict[str, Any] = {"instance_id": instance_id}
         if helper_ids:
             json_data["helper_ids"] = helper_ids
+        if completed_by_user_id is not None:
+            json_data["completed_by_user_id"] = completed_by_user_id
 
         data = await self._request("POST", "/api/complete/", json_data=json_data)
         return data if isinstance(data, dict) else {}

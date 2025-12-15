@@ -31,8 +31,18 @@ async def async_setup_entry(
     entities.append(ChoreboardOutstandingSensor(coordinator))
     entities.append(ChoreboardLateSensor(coordinator))
     entities.append(ChoreboardPoolSensor(coordinator))
+    entities.append(ChoreboardChoreBreakdownSensor(coordinator))
+    entities.append(ChoreboardCompletionHistorySensor(coordinator))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "weekly"))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "alltime"))
+
+    # Create chore leaderboard sensors (arcade mode)
+    chore_leaderboards = coordinator.data.get("chore_leaderboards", [])
+    for chore_lb in chore_leaderboards:
+        chore_id = chore_lb.get("chore_id")
+        chore_name = chore_lb.get("chore_name")
+        if chore_id and chore_name:
+            entities.append(ChoreboardChoreLeaderboardSensor(coordinator, chore_id, chore_name))
 
     # Create per-user sensors
     for username in coordinator.monitored_users:
@@ -40,6 +50,10 @@ async def async_setup_entry(
         entities.append(ChoreboardMyChoresSensor(coordinator, username))
         # "My Immediate Chores" - only chores not marked as "Complete Later"
         entities.append(ChoreboardMyImmediateChoresSensor(coordinator, username))
+        # "Weekly Points" - weekly points for the user
+        entities.append(ChoreboardUserWeeklyPointsSensor(coordinator, username))
+        # "All-Time Points" - all-time points for the user
+        entities.append(ChoreboardUserAllTimePointsSensor(coordinator, username))
 
     async_add_entities(entities)
 
@@ -82,6 +96,26 @@ class ChoreboardOutstandingSensor(
                 ),
                 "is_pool": chore.get("chore", {}).get("is_pool", False),
             }
+
+            # Add last completion information if available
+            last_completion = chore.get("last_completion")
+            if last_completion:
+                chore_info["last_completed_by"] = (
+                    last_completion.get("completed_by", {}).get("display_name")
+                    or last_completion.get("completed_by", {}).get("username")
+                    or "Unknown"
+                )
+                chore_info["last_completed_at"] = last_completion.get("completed_at")
+                chore_info["was_late"] = last_completion.get("was_late", False)
+                # Add helpers if any
+                helpers = last_completion.get("helpers", [])
+                if helpers:
+                    helper_names = [
+                        h.get("display_name") or h.get("username") or "Unknown"
+                        for h in helpers
+                    ]
+                    chore_info["helpers"] = helper_names
+
             chore_list.append(chore_info)
 
         return {
@@ -134,6 +168,26 @@ class ChoreboardLateSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
                 ),
                 "is_overdue": chore.get("is_overdue", True),
             }
+
+            # Add last completion information if available
+            last_completion = chore.get("last_completion")
+            if last_completion:
+                chore_info["last_completed_by"] = (
+                    last_completion.get("completed_by", {}).get("display_name")
+                    or last_completion.get("completed_by", {}).get("username")
+                    or "Unknown"
+                )
+                chore_info["last_completed_at"] = last_completion.get("completed_at")
+                chore_info["was_late"] = last_completion.get("was_late", False)
+                # Add helpers if any
+                helpers = last_completion.get("helpers", [])
+                if helpers:
+                    helper_names = [
+                        h.get("display_name") or h.get("username") or "Unknown"
+                        for h in helpers
+                    ]
+                    chore_info["helpers"] = helper_names
+
             chore_list.append(chore_info)
 
         return {
@@ -186,11 +240,157 @@ class ChoreboardPoolSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
                 "description": chore.get("chore", {}).get("description", ""),
                 "status": chore.get("status", "POOL"),
             }
+
+            # Add last completion information if available
+            last_completion = chore.get("last_completion")
+            if last_completion:
+                chore_info["last_completed_by"] = (
+                    last_completion.get("completed_by", {}).get("display_name")
+                    or last_completion.get("completed_by", {}).get("username")
+                    or "Unknown"
+                )
+                chore_info["last_completed_at"] = last_completion.get("completed_at")
+                chore_info["was_late"] = last_completion.get("was_late", False)
+                # Add helpers if any
+                helpers = last_completion.get("helpers", [])
+                if helpers:
+                    helper_names = [
+                        h.get("display_name") or h.get("username") or "Unknown"
+                        for h in helpers
+                    ]
+                    chore_info["helpers"] = helper_names
+
             chore_list.append(chore_info)
 
         return {
             "chores": chore_list,
             "count": len(chores),
+        }
+
+
+class ChoreboardChoreBreakdownSensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for pool vs assigned chore breakdown statistics."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:chart-pie"
+
+    def __init__(self, coordinator: ChoreboardCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_chore_breakdown"
+        self._attr_name = "Chore Breakdown"
+
+    @property
+    def native_value(self) -> int:
+        """Return the total number of chores."""
+        outstanding = self.coordinator.data.get("outstanding_chores", [])
+        late = self.coordinator.data.get("late_chores", [])
+        # Combine and deduplicate by chore ID
+        all_chores = {chore.get("id"): chore for chore in outstanding + late}
+        return len(all_chores)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        outstanding = self.coordinator.data.get("outstanding_chores", [])
+        late = self.coordinator.data.get("late_chores", [])
+        pool = self.coordinator.data.get("pool_chores", [])
+
+        # Combine and deduplicate by chore ID
+        all_chores = {chore.get("id"): chore for chore in outstanding + late}
+        total = len(all_chores)
+
+        # Count pool chores
+        pool_count = len(pool)
+
+        # Count assigned chores (non-pool chores)
+        assigned_count = total - pool_count
+
+        # Calculate percentages
+        pool_pct = round((pool_count / total * 100), 1) if total > 0 else 0
+        assigned_pct = round((assigned_count / total * 100), 1) if total > 0 else 0
+
+        # Break down by status
+        status_counts = {}
+        for chore in all_chores.values():
+            status = chore.get("status", "UNKNOWN")
+            status_counts[status] = status_counts.get(status, 0) + 1
+
+        return {
+            "total_chores": total,
+            "pool_chores": pool_count,
+            "assigned_chores": assigned_count,
+            "pool_percentage": pool_pct,
+            "assigned_percentage": assigned_pct,
+            "status_breakdown": status_counts,
+            "outstanding_count": len(outstanding),
+            "late_count": len(late),
+        }
+
+
+class ChoreboardCompletionHistorySensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for recent completion history."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:history"
+
+    def __init__(self, coordinator: ChoreboardCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_completion_history"
+        self._attr_name = "Completion History"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of recent completions."""
+        completions = self.coordinator.data.get("recent_completions", [])
+        return len(completions)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        completions = self.coordinator.data.get("recent_completions", [])
+
+        completion_list = []
+        for completion in completions:
+            chore_instance = completion.get("chore_instance", {})
+            completed_by = completion.get("completed_by", {})
+            shares = completion.get("shares", [])
+
+            completion_info = {
+                "id": completion.get("id"),
+                "chore_name": chore_instance.get("chore", {}).get("name", "Unknown"),
+                "completed_by": (
+                    completed_by.get("display_name")
+                    or completed_by.get("username")
+                    or "Unknown"
+                ),
+                "completed_at": completion.get("completed_at"),
+                "was_late": completion.get("was_late", False),
+                "points": chore_instance.get(
+                    "points_value", chore_instance.get("chore", {}).get("points", 0)
+                ),
+            }
+
+            # Add helpers if any
+            if shares:
+                helper_names = []
+                for share in shares:
+                    user = share.get("user", {})
+                    name = user.get("display_name") or user.get("username") or "Unknown"
+                    points = share.get("points_awarded", 0)
+                    helper_names.append({"name": name, "points": points})
+                completion_info["helpers"] = helper_names
+
+            completion_list.append(completion_info)
+
+        return {
+            "completions": completion_list,
+            "count": len(completions),
         }
 
 
@@ -232,6 +432,26 @@ class ChoreboardMyChoresSensor(CoordinatorEntity[ChoreboardCoordinator], SensorE
                 "is_overdue": chore.get("is_overdue", False),
                 "status": chore.get("status", "unknown"),
             }
+
+            # Add last completion information if available
+            last_completion = chore.get("last_completion")
+            if last_completion:
+                chore_info["last_completed_by"] = (
+                    last_completion.get("completed_by", {}).get("display_name")
+                    or last_completion.get("completed_by", {}).get("username")
+                    or "Unknown"
+                )
+                chore_info["last_completed_at"] = last_completion.get("completed_at")
+                chore_info["was_late"] = last_completion.get("was_late", False)
+                # Add helpers if any
+                helpers = last_completion.get("helpers", [])
+                if helpers:
+                    helper_names = [
+                        h.get("display_name") or h.get("username") or "Unknown"
+                        for h in helpers
+                    ]
+                    chore_info["helpers"] = helper_names
+
             chore_list.append(chore_info)
 
         return {
@@ -294,6 +514,26 @@ class ChoreboardMyImmediateChoresSensor(
                 "status": chore.get("status", "unknown"),
                 "complete_later": chore.get("chore", {}).get("complete_later", False),
             }
+
+            # Add last completion information if available
+            last_completion = chore.get("last_completion")
+            if last_completion:
+                chore_info["last_completed_by"] = (
+                    last_completion.get("completed_by", {}).get("display_name")
+                    or last_completion.get("completed_by", {}).get("username")
+                    or "Unknown"
+                )
+                chore_info["last_completed_at"] = last_completion.get("completed_at")
+                chore_info["was_late"] = last_completion.get("was_late", False)
+                # Add helpers if any
+                helpers = last_completion.get("helpers", [])
+                if helpers:
+                    helper_names = [
+                        h.get("display_name") or h.get("username") or "Unknown"
+                        for h in helpers
+                    ]
+                    chore_info["helpers"] = helper_names
+
             chore_list.append(chore_info)
 
         return {
@@ -359,4 +599,155 @@ class ChoreboardLeaderboardSensor(
             "type": self._leaderboard_type,
             "users": user_list,
             "count": len(leaderboard),
+        }
+
+
+class ChoreboardChoreLeaderboardSensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for a specific chore's leaderboard (arcade mode)."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:timer-outline"
+
+    def __init__(
+        self, coordinator: ChoreboardCoordinator, chore_id: int, chore_name: str
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._chore_id = chore_id
+        self._chore_name = chore_name
+        self._attr_unique_id = f"{DOMAIN}_chore_leaderboard_{chore_id}"
+        self._attr_name = f"Arcade: {chore_name}"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of high scores for this chore."""
+        chore_leaderboards = self.coordinator.data.get("chore_leaderboards", [])
+        for chore_lb in chore_leaderboards:
+            if chore_lb.get("chore_id") == self._chore_id:
+                scores = chore_lb.get("high_scores", [])
+                return len(scores)
+        return 0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        chore_leaderboards = self.coordinator.data.get("chore_leaderboards", [])
+
+        for chore_lb in chore_leaderboards:
+            if chore_lb.get("chore_id") == self._chore_id:
+                high_scores = chore_lb.get("high_scores", [])
+
+                score_list = []
+                for score in high_scores:
+                    user = score.get("user", {})
+                    score_info = {
+                        "rank": score.get("rank"),
+                        "username": user.get("username", "Unknown"),
+                        "display_name": user.get("display_name", user.get("username", "Unknown")),
+                        "time_seconds": score.get("time_seconds"),
+                        "time_formatted": score.get("time_formatted"),
+                        "achieved_at": score.get("achieved_at"),
+                    }
+                    score_list.append(score_info)
+
+                return {
+                    "chore_id": self._chore_id,
+                    "chore_name": self._chore_name,
+                    "scores": score_list,
+                    "count": len(high_scores),
+                }
+
+        return {
+            "chore_id": self._chore_id,
+            "chore_name": self._chore_name,
+            "scores": [],
+            "count": 0,
+        }
+
+
+class ChoreboardUserWeeklyPointsSensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for a user's weekly points."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:medal-outline"
+    _attr_native_unit_of_measurement = "points"
+
+    def __init__(self, coordinator: ChoreboardCoordinator, username: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._username = username
+        self._attr_unique_id = f"{DOMAIN}_weekly_points_{username}"
+        self._attr_name = f"{username} - Weekly Points"
+
+    @property
+    def native_value(self) -> float:
+        """Return the user's weekly points."""
+        users = self.coordinator.data.get("users", [])
+        for user in users:
+            if user.get("username") == self._username:
+                return float(user.get("weekly_points", 0))
+        return 0.0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        users = self.coordinator.data.get("users", [])
+        for user in users:
+            if user.get("username") == self._username:
+                return {
+                    "username": self._username,
+                    "display_name": user.get("display_name", self._username),
+                    "points": float(user.get("weekly_points", 0)),
+                    "claims_today": user.get("claims_today", 0),
+                }
+        return {
+            "username": self._username,
+            "points": 0.0,
+        }
+
+
+class ChoreboardUserAllTimePointsSensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for a user's all-time points."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:trophy"
+    _attr_native_unit_of_measurement = "points"
+
+    def __init__(self, coordinator: ChoreboardCoordinator, username: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._username = username
+        self._attr_unique_id = f"{DOMAIN}_alltime_points_{username}"
+        self._attr_name = f"{username} - All-Time Points"
+
+    @property
+    def native_value(self) -> float:
+        """Return the user's all-time points."""
+        users = self.coordinator.data.get("users", [])
+        for user in users:
+            if user.get("username") == self._username:
+                return float(user.get("all_time_points", 0))
+        return 0.0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        users = self.coordinator.data.get("users", [])
+        for user in users:
+            if user.get("username") == self._username:
+                return {
+                    "username": self._username,
+                    "display_name": user.get("display_name", self._username),
+                    "points": float(user.get("all_time_points", 0)),
+                    "weekly_points": float(user.get("weekly_points", 0)),
+                }
+        return {
+            "username": self._username,
+            "points": 0.0,
         }
