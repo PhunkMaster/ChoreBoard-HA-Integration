@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
+
 from custom_components.choreboard.coordinator import ChoreboardCoordinator
 
 
