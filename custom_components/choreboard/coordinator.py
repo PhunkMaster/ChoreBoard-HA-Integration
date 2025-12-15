@@ -154,6 +154,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         {
             "outstanding_chores": [...],  # List of all outstanding chores
             "late_chores": [...],          # List of all overdue chores
+            "pool_chores": [...],          # List of unassigned pool chores
             "leaderboard_weekly": [...],   # Weekly leaderboard data
             "leaderboard_alltime": [...],  # All-time leaderboard data
             "my_chores": {                 # Per-user chore data
@@ -174,6 +175,17 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Filter chores to only include those due by today at 23:59
             outstanding_chores = self._filter_chores_by_due_date(outstanding_chores_raw)
             late_chores = self._filter_chores_by_due_date(late_chores_raw)
+
+            # Extract pool chores (unassigned chores available for claiming)
+            pool_chores = [
+                chore
+                for chore in outstanding_chores
+                if chore.get("status") == "POOL"
+                or (
+                    chore.get("chore", {}).get("is_pool", False)
+                    and not chore.get("assigned_to")
+                )
+            ]
 
             # Fetch per-user data by filtering outstanding/late chores
             my_chores_data = {}
@@ -214,15 +226,17 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = {
                 "outstanding_chores": outstanding_chores,
                 "late_chores": late_chores,
+                "pool_chores": pool_chores,
                 "leaderboard_weekly": leaderboard_weekly,
                 "leaderboard_alltime": leaderboard_alltime,
                 "my_chores": my_chores_data,
             }
 
             _LOGGER.debug(
-                "Successfully fetched data: %d outstanding, %d late, %d users monitored",
+                "Successfully fetched data: %d outstanding, %d late, %d pool, %d users monitored",
                 len(outstanding_chores),
                 len(late_chores),
+                len(pool_chores),
                 len(self.monitored_users),
             )
 

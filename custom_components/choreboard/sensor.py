@@ -30,6 +30,7 @@ async def async_setup_entry(
     # Create system-wide sensors
     entities.append(ChoreboardOutstandingSensor(coordinator))
     entities.append(ChoreboardLateSensor(coordinator))
+    entities.append(ChoreboardPoolSensor(coordinator))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "weekly"))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "alltime"))
 
@@ -148,6 +149,49 @@ class ChoreboardLateSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
             username = assigned_to.get("username", "Unknown")
             return assigned_to.get("display_name", username) or "Unknown"
         return str(assigned_to)
+
+
+class ChoreboardPoolSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntity):
+    """Sensor for pool chores (unassigned chores available for claiming)."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:pool"
+
+    def __init__(self, coordinator: ChoreboardCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_pool"
+        self._attr_name = "Pool Chores"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of pool chores."""
+        chores = self.coordinator.data.get("pool_chores", [])
+        return len(chores)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        chores = self.coordinator.data.get("pool_chores", [])
+
+        chore_list = []
+        for chore in chores:
+            chore_info = {
+                "id": chore.get("id"),
+                "name": chore.get("chore", {}).get("name", "Unknown"),
+                "due_date": chore.get("due_at"),
+                "points": chore.get(
+                    "points_value", chore.get("chore", {}).get("points", 0)
+                ),
+                "description": chore.get("chore", {}).get("description", ""),
+                "status": chore.get("status", "POOL"),
+            }
+            chore_list.append(chore_info)
+
+        return {
+            "chores": chore_list,
+            "count": len(chores),
+        }
 
 
 class ChoreboardMyChoresSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntity):
