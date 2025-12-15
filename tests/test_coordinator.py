@@ -243,3 +243,79 @@ async def test_coordinator_filters_chores_on_update(hass, mock_choreboard_api):
         # Verify data was filtered and normalized
         assert "outstanding_chores" in coordinator.data
         assert len(coordinator.data["outstanding_chores"]) >= 0
+
+
+@pytest.mark.asyncio
+async def test_coordinator_extracts_pool_chores(hass, mock_choreboard_api):
+    """Test that coordinator extracts pool chores from outstanding chores."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
+        },
+    )
+
+    today = dt_util.now()
+
+    with patch(
+        "custom_components.choreboard.coordinator.ChoreboardCoordinator._async_update_data"
+    ) as mock_update:
+        # Create test data with pool and assigned chores
+        mock_update.return_value = {
+            "outstanding_chores": [
+                {
+                    "id": 1,
+                    "chore": {"name": "Pool Chore 1", "is_pool": True},
+                    "status": "POOL",
+                    "assigned_to": None,
+                    "due_at": today.replace(hour=10, minute=0, second=0).isoformat(),
+                },
+                {
+                    "id": 2,
+                    "chore": {"name": "Assigned Chore", "is_pool": False},
+                    "status": "ASSIGNED",
+                    "assigned_to": {"username": "testuser"},
+                    "due_at": today.replace(hour=11, minute=0, second=0).isoformat(),
+                },
+                {
+                    "id": 3,
+                    "chore": {"name": "Pool Chore 2", "is_pool": True},
+                    "status": "POOL",
+                    "assigned_to": None,
+                    "due_at": today.replace(hour=12, minute=0, second=0).isoformat(),
+                },
+            ],
+            "late_chores": [],
+            "pool_chores": [
+                {
+                    "id": 1,
+                    "chore": {"name": "Pool Chore 1", "is_pool": True},
+                    "status": "POOL",
+                    "assigned_to": None,
+                    "due_at": today.replace(hour=10, minute=0, second=0).isoformat(),
+                },
+                {
+                    "id": 3,
+                    "chore": {"name": "Pool Chore 2", "is_pool": True},
+                    "status": "POOL",
+                    "assigned_to": None,
+                    "due_at": today.replace(hour=12, minute=0, second=0).isoformat(),
+                },
+            ],
+            "leaderboard_weekly": [],
+            "leaderboard_alltime": [],
+            "my_chores": {},
+        }
+
+        coordinator = ChoreboardCoordinator(hass, entry)
+        await coordinator.async_config_entry_first_refresh()
+
+        # Verify pool chores were extracted
+        assert "pool_chores" in coordinator.data
+        pool_chores = coordinator.data["pool_chores"]
+        assert len(pool_chores) == 2
+        assert pool_chores[0]["id"] == 1
+        assert pool_chores[1]["id"] == 3
