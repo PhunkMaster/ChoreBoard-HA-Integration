@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import homeassistant.util.dt as dt_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -57,6 +58,95 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+    @staticmethod
+    def _is_due_today(due_at_str: str | None) -> bool:
+        """Check if a chore is due by today at 23:59:59.
+
+        Args:
+            due_at_str: ISO 8601 datetime string (e.g., "2025-12-15T10:00:00Z")
+
+        Returns:
+            True if the chore is due by end of today, False otherwise
+        """
+        if not due_at_str:
+            return False
+
+        try:
+            # Parse the due date string
+            due_date = dt_util.parse_datetime(due_at_str)
+            if not due_date:
+                return False
+
+            # Get end of today (23:59:59) in local timezone
+            now = dt_util.now()
+            end_of_today = now.replace(
+                hour=23, minute=59, second=59, microsecond=999999
+            )
+
+            # Compare
+            return due_date <= end_of_today
+
+        except (ValueError, TypeError) as err:
+            _LOGGER.debug("Failed to parse due_at '%s': %s", due_at_str, err)
+            return False
+
+    @staticmethod
+    def _normalize_datetime(dt_str: str | None) -> str | None:
+        """Normalize datetime string to YYYY-MM-DD HH:MM format (no seconds).
+
+        Args:
+            dt_str: ISO 8601 datetime string
+
+        Returns:
+            Formatted datetime string without seconds, or None if parsing fails
+        """
+        if not dt_str:
+            return None
+
+        try:
+            dt_obj = dt_util.parse_datetime(dt_str)
+            if not dt_obj:
+                return None
+
+            # Convert to local timezone
+            dt_local = dt_util.as_local(dt_obj)
+
+            # Format without seconds
+            return dt_local.strftime("%Y-%m-%d %H:%M")
+
+        except (ValueError, TypeError) as err:
+            _LOGGER.debug("Failed to normalize datetime '%s': %s", dt_str, err)
+            return dt_str
+
+    def _filter_chores_by_due_date(
+        self, chores: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Filter chores to only include those due by today at 23:59.
+
+        Also normalizes datetime fields to remove seconds/microseconds.
+
+        Args:
+            chores: List of chore dictionaries
+
+        Returns:
+            Filtered list of chores due by today
+        """
+        filtered = []
+        for chore in chores:
+            # Check if chore is due by today
+            if self._is_due_today(chore.get("due_at")):
+                # Normalize datetime fields
+                if "due_at" in chore:
+                    chore["due_at"] = self._normalize_datetime(chore["due_at"])
+                if "completed_at" in chore:
+                    chore["completed_at"] = self._normalize_datetime(
+                        chore["completed_at"]
+                    )
+
+                filtered.append(chore)
+
+        return filtered
+
     async def _async_update_data(self) -> dict[str, Any]:  # noqa: C901
         """Fetch data from ChoreBoard API.
 
@@ -76,10 +166,14 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Fetching data from ChoreBoard API")
 
             # Fetch system-wide data (parallel requests)
-            outstanding_chores = await self.api_client.get_outstanding_chores()
-            late_chores = await self.api_client.get_late_chores()
+            outstanding_chores_raw = await self.api_client.get_outstanding_chores()
+            late_chores_raw = await self.api_client.get_late_chores()
             leaderboard_weekly = await self.api_client.get_leaderboard("weekly")
             leaderboard_alltime = await self.api_client.get_leaderboard("alltime")
+
+            # Filter chores to only include those due by today at 23:59
+            outstanding_chores = self._filter_chores_by_due_date(outstanding_chores_raw)
+            late_chores = self._filter_chores_by_due_date(late_chores_raw)
 
             # Fetch per-user data by filtering outstanding/late chores
             my_chores_data = {}
