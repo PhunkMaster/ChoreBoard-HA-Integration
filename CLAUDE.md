@@ -481,3 +481,4 @@ Legacy template entities are deprecated in Home Assistant 2025.12. Always inheri
 - [Entity Documentation](https://developers.home-assistant.io/docs/core/entity/)
 - [Testing Guide](https://developers.home-assistant.io/docs/development_testing/)
 - [HACS Documentation](https://www.hacs.xyz/docs/publish/integration/)
+- Always use semver branching

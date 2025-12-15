@@ -22,6 +22,7 @@ known-first-party = ["custom_components.choreboard"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 pythonpath = ["."]
+addopts = "-p no:pytest_socket"
 
 [tool.mypy]
 python_version = "3.11"
