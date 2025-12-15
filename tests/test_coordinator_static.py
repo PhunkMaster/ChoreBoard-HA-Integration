@@ -52,7 +52,8 @@ def test_normalize_datetime_removes_seconds():
     assert result is not None
     assert ":" in result  # Has hour:minute separator
     assert result.count(":") == 1  # Only one colon (no seconds)
-    assert "10:30" in result  # Has the hour and minute
+    assert "2025-12-15" in result  # Has the date
+    # Note: Don't check specific time - timezone conversion varies by environment
 
 
 def test_normalize_datetime_with_none():
