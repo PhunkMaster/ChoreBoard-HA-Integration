@@ -1,8 +1,9 @@
 """Tests for ChoreBoard services."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -11,6 +12,10 @@ from custom_components.choreboard.const import (
     ATTR_CHORE_ID,
     ATTR_COMPLETED_BY_USER_ID,
     ATTR_HELPERS,
+    CONF_MONITORED_USERS,
+    CONF_SECRET_KEY,
+    CONF_URL,
+    CONF_USERNAME,
     DOMAIN,
     SERVICE_CLAIM_CHORE,
     SERVICE_MARK_COMPLETE,
@@ -21,17 +26,10 @@ from custom_components.choreboard.const import (
 @pytest.fixture
 async def setup_integration(hass):
     """Set up the ChoreBoard integration for testing."""
-    from homeassistant import config_entries
-    from custom_components.choreboard.const import (
-        CONF_USERNAME,
-        CONF_SECRET_KEY,
-        CONF_URL,
-        CONF_MONITORED_USERS,
-    )
-
     with patch("custom_components.choreboard.coordinator.ChoreboardCoordinator._async_update_data"):
         entry = config_entries.ConfigEntry(
             version=1,
+            minor_version=1,
             domain=DOMAIN,
             title="Test ChoreBoard",
             data={

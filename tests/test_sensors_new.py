@@ -1,11 +1,16 @@
 """Tests for new ChoreBoard sensors."""
 
-from unittest.mock import patch
-
 import pytest
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
-from custom_components.choreboard.const import DOMAIN
+from custom_components.choreboard.const import (
+    CONF_MONITORED_USERS,
+    CONF_SECRET_KEY,
+    CONF_URL,
+    CONF_USERNAME,
+    DOMAIN,
+)
 
 
 @pytest.fixture
@@ -19,16 +24,9 @@ async def setup_integration(hass, mock_choreboard_api):
 
 async def _create_config_entry(hass):
     """Create a mock config entry."""
-    from homeassistant import config_entries
-    from custom_components.choreboard.const import (
-        CONF_USERNAME,
-        CONF_SECRET_KEY,
-        CONF_URL,
-        CONF_MONITORED_USERS,
-    )
-
     entry = config_entries.ConfigEntry(
         version=1,
+        minor_version=1,
         domain=DOMAIN,
         title="Test ChoreBoard",
         data={

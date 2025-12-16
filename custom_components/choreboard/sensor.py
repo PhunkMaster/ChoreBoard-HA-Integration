@@ -313,7 +313,7 @@ class ChoreboardChoreBreakdownSensor(
         assigned_pct = round((assigned_count / total * 100), 1) if total > 0 else 0
 
         # Break down by status
-        status_counts = {}
+        status_counts: dict[str, int] = {}
         for chore in all_chores.values():
             status = chore.get("status", "UNKNOWN")
             status_counts[status] = status_counts.get(status, 0) + 1
