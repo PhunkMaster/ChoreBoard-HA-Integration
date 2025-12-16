@@ -9,13 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Users Sensor** (`sensor.users`) - Dedicated sensor exposing all ChoreBoard users with stats
-- **Users array in all sensors** - All ChoreBoard sensors now include `users` attribute for card compatibility
+- **Users array in ALL 12 sensors** - Complete implementation across entire sensor suite for card compatibility
+  - Completion History, Leaderboard (weekly/all-time), Chore Leaderboard (arcade mode)
+  - User Points sensors (weekly and all-time)
+  - Pool Chores, Outstanding, Late, My Chores, My Immediate Chores, Chore Breakdown
 - Users data includes `id`, `username`, `display_name`, `first_name`, points, and assignment eligibility
 - `format_users_for_attributes()` helper function for consistent user data formatting across sensors
+- Leaderboard sensors now include `all_users` field with full users list (non-breaking change)
 
 ### Changed
 - All sensor attributes now include full users list for ChoreBoard Card pool chores feature
 - Enhanced sensor attributes to support user selection dialogs in the ChoreBoard Card
+- Leaderboard sensors maintain backward compatibility while adding full users data
 
 ### Documentation
 - Added Sensor Attributes section to CLAUDE.md with users array structure

@@ -432,6 +432,7 @@ class ChoreboardCompletionHistorySensor(
         return {
             "completions": completion_list,
             "count": len(completions),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -642,6 +643,7 @@ class ChoreboardLeaderboardSensor(
             "type": self._leaderboard_type,
             "users": user_list,
             "count": len(leaderboard),
+            "all_users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -702,6 +704,7 @@ class ChoreboardChoreLeaderboardSensor(
                     "chore_name": self._chore_name,
                     "scores": score_list,
                     "count": len(high_scores),
+                    "users": format_users_for_attributes(self.coordinator.data),
                 }
 
         return {
@@ -709,6 +712,7 @@ class ChoreboardChoreLeaderboardSensor(
             "chore_name": self._chore_name,
             "scores": [],
             "count": 0,
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -748,10 +752,12 @@ class ChoreboardUserWeeklyPointsSensor(
                     "display_name": user.get("display_name", self._username),
                     "points": float(user.get("weekly_points", 0)),
                     "claims_today": user.get("claims_today", 0),
+                    "users": format_users_for_attributes(self.coordinator.data),
                 }
         return {
             "username": self._username,
             "points": 0.0,
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -791,10 +797,12 @@ class ChoreboardUserAllTimePointsSensor(
                     "display_name": user.get("display_name", self._username),
                     "points": float(user.get("all_time_points", 0)),
                     "weekly_points": float(user.get("weekly_points", 0)),
+                    "users": format_users_for_attributes(self.coordinator.data),
                 }
         return {
             "username": self._username,
             "points": 0.0,
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
