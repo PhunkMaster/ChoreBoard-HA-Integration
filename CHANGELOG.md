@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `scan_interval` configuration option in setup flow
   - Range validation (10-300 seconds) to ensure reasonable polling behavior
   - Default: 30 seconds (was fixed at 5 minutes)
+- **Options Flow** - Menu-based reconfiguration without reinstalling integration
+  - Update scan interval after initial setup
+  - Add/remove monitored users dynamically
+  - Update credentials and backend URL
+  - All changes applied immediately with automatic reload
 
 ### Changed
 - Service handlers now trigger immediate coordinator refresh for responsive UI updates
@@ -24,16 +29,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `choreboard.undo_completion` → immediate refresh
 - Coordinator update interval is now user-configurable instead of fixed
 - Background polling occurs only when no recent user actions have triggered updates
+- Options flow replaced with menu-based interface (3 configuration categories)
+- Config entry updates now stored in `data` instead of `options` for consistency
 
 ### Improved
 - User experience: Data updates within 2 seconds of service calls instead of up to 5 minutes
 - Network efficiency: Configurable polling allows users to balance freshness vs. API load
 - Coordinator architecture: Cleaner separation between scheduled and action-triggered updates
+- Configuration flexibility: All settings reconfigurable without removing/re-adding integration
+- Credential updates: Can change backend URL or credentials after initial setup
 
 ### Technical
 - Added `CONF_SCAN_INTERVAL` configuration constant
 - Updated config flow to collect scan_interval preference
 - Enhanced coordinator initialization to use configurable interval
+- Implemented menu-based options flow with 3 steps (scan_interval, monitored_users, credentials)
+- Each options step validates input and reloads integration automatically
+- Removed redundant update listener (reload handled directly in options flow)
 - All code quality checks passing (ruff, mypy)
 
 ## [1.2.0] - 2025-12-16

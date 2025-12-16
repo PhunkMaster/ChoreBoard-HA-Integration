@@ -38,6 +38,59 @@
       "already_configured": "This ChoreBoard instance and username combination is already configured."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ChoreBoard Options",
+        "description": "Choose which setting to configure",
+        "menu_options": {
+          "scan_interval": "Update Interval",
+          "monitored_users": "Monitored Users",
+          "credentials": "Connection Settings"
+        }
+      },
+      "scan_interval": {
+        "title": "Configure Update Interval",
+        "description": "How often to poll the ChoreBoard backend for updates (in seconds). Changes made through Home Assistant will trigger immediate updates regardless of this setting.",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "Poll frequency in seconds (10-300). Default is 30 seconds."
+        }
+      },
+      "monitored_users": {
+        "title": "Configure Monitored Users",
+        "description": "Select which ChoreBoard users to monitor. A 'My Chores' sensor will be created for each selected user.",
+        "data": {
+          "monitored_users": "Users to monitor"
+        },
+        "data_description": {
+          "monitored_users": "Select one or more users. Changes will be applied immediately."
+        }
+      },
+      "credentials": {
+        "title": "Update Connection Settings",
+        "description": "Update your ChoreBoard backend connection credentials and URL.",
+        "data": {
+          "username": "ChoreBoard Username",
+          "secret_key": "Django SECRET_KEY",
+          "url": "ChoreBoard URL"
+        },
+        "data_description": {
+          "username": "Your ChoreBoard username",
+          "secret_key": "The Django SECRET_KEY from your ChoreBoard backend settings",
+          "url": "Base URL of your ChoreBoard instance (e.g., http://localhost:8000)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to ChoreBoard backend. Check the URL and network connection.",
+      "invalid_auth": "Authentication failed. Check your username and SECRET_KEY.",
+      "no_users_selected": "Please select at least one user to monitor.",
+      "unknown": "Unexpected error occurred. Check Home Assistant logs."
+    }
+  },
   "services": {
     "mark_complete": {
       "name": "Mark chore complete",

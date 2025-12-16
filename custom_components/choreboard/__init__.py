@@ -49,12 +49,6 @@ SERVICE_UNDO_COMPLETION_SCHEMA = vol.Schema(
 )
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    # Reload the config entry to apply new monitored users
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ChoreBoard from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -67,9 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Forward setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Add update listener for options changes
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     # Register services
     async def handle_mark_complete(call: ServiceCall) -> None:

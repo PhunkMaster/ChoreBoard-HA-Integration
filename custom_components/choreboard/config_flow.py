@@ -252,10 +252,58 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
         super().__init__()
         self._available_users: list[dict[str, str]] = []
 
-    async def async_step_init(  # noqa: C901
+    async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options for monitored users."""
+        """Show options menu."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["scan_interval", "monitored_users", "credentials"],
+        )
+
+    async def async_step_scan_interval(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure scan interval."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Update the config entry with new scan interval
+            new_data = dict(self.config_entry.data)
+            new_data[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data=new_data,
+            )
+
+            # Reload integration to apply changes
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+            return self.async_create_entry(title="", data={})
+
+        # Get current scan interval
+        current_interval = self.config_entry.data.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+
+        return self.async_show_form(
+            step_id="scan_interval",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=10, max=300),
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_monitored_users(  # noqa: C901
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure monitored users."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -271,10 +319,18 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "no_users_selected"
             else:
                 # Update the config entry with new monitored users
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_MONITORED_USERS: monitored_users},
+                new_data = dict(self.config_entry.data)
+                new_data[CONF_MONITORED_USERS] = monitored_users
+
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data=new_data,
                 )
+
+                # Reload integration to apply changes
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+                return self.async_create_entry(title="", data={})
 
         # Fetch available users using existing credentials
         try:
@@ -365,10 +421,75 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         return self.async_show_form(
-            step_id="init",
+            step_id="monitored_users",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={
-                "info": "Update which ChoreBoard users to monitor. Changes will be applied immediately."
-            },
+        )
+
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Update credentials and URL."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Validate new credentials
+            api_client = ChoreboardAPIClient(
+                base_url=user_input[CONF_URL],
+                username=user_input[CONF_USERNAME],
+                secret_key=user_input[CONF_SECRET_KEY],
+                session=async_get_clientsession(self.hass),
+            )
+
+            try:
+                is_valid = await api_client.test_connection()
+                if not is_valid:
+                    errors["base"] = "invalid_auth"
+                else:
+                    # Update config with new credentials
+                    new_data = dict(self.config_entry.data)
+                    new_data[CONF_USERNAME] = user_input[CONF_USERNAME]
+                    new_data[CONF_SECRET_KEY] = user_input[CONF_SECRET_KEY]
+                    new_data[CONF_URL] = user_input[CONF_URL]
+
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data=new_data,
+                    )
+
+                    # Reload integration to apply changes
+                    await self.hass.config_entries.async_reload(
+                        self.config_entry.entry_id
+                    )
+
+                    return self.async_create_entry(title="", data={})
+
+            except ChoreboardAuthError:
+                errors["base"] = "invalid_auth"
+            except ChoreboardConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception as err:
+                _LOGGER.exception("Unexpected error validating credentials: %s", err)
+                errors["base"] = "unknown"
+
+        # Get current credentials (with defaults for display)
+        return self.async_show_form(
+            step_id="credentials",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=self.config_entry.data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_SECRET_KEY,
+                        default=self.config_entry.data.get(CONF_SECRET_KEY, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_URL,
+                        default=self.config_entry.data.get(CONF_URL, DEFAULT_URL),
+                    ): str,
+                }
+            ),
+            errors=errors,
         )
