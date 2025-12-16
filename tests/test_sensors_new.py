@@ -36,7 +36,7 @@ async def setup_integration(hass, mock_choreboard_api):
 @pytest.mark.enable_socket
 async def test_pool_chores_sensor(hass: HomeAssistant, setup_integration):
     """Test pool chores sensor."""
-    state = hass.states.get("sensor.choreboard_pool_chores")
+    state = hass.states.get("sensor.pool_chores")
     assert state is not None
     assert state.state == "1"  # One pool chore in mock data
 
@@ -51,7 +51,7 @@ async def test_pool_chores_sensor(hass: HomeAssistant, setup_integration):
 @pytest.mark.enable_socket
 async def test_chore_breakdown_sensor(hass: HomeAssistant, setup_integration):
     """Test chore breakdown statistics sensor."""
-    state = hass.states.get("sensor.choreboard_chore_breakdown")
+    state = hass.states.get("sensor.chore_breakdown")
     assert state is not None
 
     # Check attributes
@@ -69,7 +69,7 @@ async def test_chore_breakdown_sensor(hass: HomeAssistant, setup_integration):
 @pytest.mark.enable_socket
 async def test_completion_history_sensor(hass: HomeAssistant, setup_integration):
     """Test completion history sensor."""
-    state = hass.states.get("sensor.choreboard_completion_history")
+    state = hass.states.get("sensor.completion_history")
     assert state is not None
     assert state.state == "1"  # One completion in mock data
 
@@ -89,7 +89,7 @@ async def test_completion_history_sensor(hass: HomeAssistant, setup_integration)
 @pytest.mark.enable_socket
 async def test_user_weekly_points_sensor(hass: HomeAssistant, setup_integration):
     """Test user weekly points sensor."""
-    state = hass.states.get("sensor.choreboard_testuser_weekly_points")
+    state = hass.states.get("sensor.testuser_weekly_points")
     assert state is not None
     assert state.state == "100.0"
 
@@ -104,7 +104,7 @@ async def test_user_weekly_points_sensor(hass: HomeAssistant, setup_integration)
 @pytest.mark.enable_socket
 async def test_user_alltime_points_sensor(hass: HomeAssistant, setup_integration):
     """Test user all-time points sensor."""
-    state = hass.states.get("sensor.choreboard_testuser_alltime_points")
+    state = hass.states.get("sensor.testuser_all_time_points")
     assert state is not None
     assert state.state == "500.0"
 
@@ -119,7 +119,7 @@ async def test_user_alltime_points_sensor(hass: HomeAssistant, setup_integration
 @pytest.mark.enable_socket
 async def test_chore_leaderboard_sensor(hass: HomeAssistant, setup_integration):
     """Test chore-specific leaderboard sensor (arcade mode)."""
-    state = hass.states.get("sensor.choreboard_chore_leaderboard_1")
+    state = hass.states.get("sensor.arcade_speed_chore")
     assert state is not None
     assert state.state == "1"  # One high score in mock data
 
@@ -138,7 +138,7 @@ async def test_chore_leaderboard_sensor(hass: HomeAssistant, setup_integration):
 async def test_completion_information_in_chores(hass: HomeAssistant, setup_integration):
     """Test that completion information is included in chore data."""
     # Check outstanding chores sensor
-    state = hass.states.get("sensor.choreboard_outstanding_chores")
+    state = hass.states.get("sensor.outstanding_chores")
     assert state is not None
 
     chores = state.attributes.get("chores", [])
@@ -158,7 +158,7 @@ async def test_my_chores_sensor_with_completion_data(
     hass: HomeAssistant, setup_integration
 ):
     """Test that my chores sensor includes completion data."""
-    state = hass.states.get("sensor.choreboard_testuser_my_chores")
+    state = hass.states.get("sensor.testuser_my_chores")
     assert state is not None
 
     chores = state.attributes.get("chores", [])
@@ -170,24 +170,24 @@ async def test_my_chores_sensor_with_completion_data(
 async def test_sensor_icons(hass: HomeAssistant, setup_integration):
     """Test that sensors have appropriate icons."""
     # Pool chores should have pool icon
-    state = hass.states.get("sensor.choreboard_pool_chores")
+    state = hass.states.get("sensor.pool_chores")
     assert state is not None
     # Icon is set in the sensor class
 
     # Breakdown should have chart icon
-    state = hass.states.get("sensor.choreboard_chore_breakdown")
+    state = hass.states.get("sensor.chore_breakdown")
     assert state is not None
 
     # Completion history should have history icon
-    state = hass.states.get("sensor.choreboard_completion_history")
+    state = hass.states.get("sensor.completion_history")
     assert state is not None
 
     # Weekly points should have medal icon
-    state = hass.states.get("sensor.choreboard_testuser_weekly_points")
+    state = hass.states.get("sensor.testuser_weekly_points")
     assert state is not None
 
     # All-time points should have trophy icon
-    state = hass.states.get("sensor.choreboard_testuser_alltime_points")
+    state = hass.states.get("sensor.testuser_all_time_points")
     assert state is not None
 
 
@@ -196,11 +196,11 @@ async def test_sensor_icons(hass: HomeAssistant, setup_integration):
 async def test_sensor_unit_of_measurement(hass: HomeAssistant, setup_integration):
     """Test that points sensors have correct unit of measurement."""
     # Weekly points
-    state = hass.states.get("sensor.choreboard_testuser_weekly_points")
+    state = hass.states.get("sensor.testuser_weekly_points")
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == "points"
 
     # All-time points
-    state = hass.states.get("sensor.choreboard_testuser_alltime_points")
+    state = hass.states.get("sensor.testuser_all_time_points")
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == "points"
