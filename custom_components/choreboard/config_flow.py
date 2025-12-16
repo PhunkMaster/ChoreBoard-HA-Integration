@@ -82,61 +82,101 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 if not is_valid:
                     errors["base"] = "invalid_auth"
                 else:
-                    # Fetch available users from multiple sources
+                    # Fetch available users from API
                     try:
-                        users_set = set()
-
-                        # 1. Get users from leaderboard (users with points)
+                        # Primary method: Use dedicated users endpoint
                         try:
-                            leaderboard = await api_client.get_leaderboard("alltime")
-                            for entry in leaderboard:
-                                user_data = entry.get("user", entry)
-                                username = user_data.get("username", "")
-                                display_name = user_data.get("display_name", username)
-                                if username:
-                                    users_set.add((username, display_name))
+                            users_data = await api_client.get_users()
+                            if users_data:
+                                self._available_users = [
+                                    {
+                                        "username": user.get("username", ""),
+                                        "display_name": user.get(
+                                            "display_name",
+                                            user.get("username", "Unknown"),
+                                        ),
+                                    }
+                                    for user in users_data
+                                    if user.get("username")
+                                ]
+                                _LOGGER.info(
+                                    "Found %d users from /api/users/ endpoint",
+                                    len(self._available_users),
+                                )
                         except ChoreboardAPIError as err:
-                            _LOGGER.debug("Could not fetch leaderboard: %s", err)
+                            _LOGGER.warning("Could not fetch users from API: %s", err)
+                            self._available_users = []
 
-                        # 2. Get users from outstanding chores
-                        try:
-                            outstanding = await api_client.get_outstanding_chores()
-                            for chore in outstanding:
-                                if assigned_to := chore.get("assigned_to"):
-                                    if isinstance(assigned_to, dict):
-                                        username = assigned_to.get("username", "")
-                                        display_name = assigned_to.get(
-                                            "display_name", username
-                                        )
-                                        if username:
-                                            users_set.add((username, display_name))
-                        except ChoreboardAPIError as err:
-                            _LOGGER.debug("Could not fetch outstanding chores: %s", err)
+                        # Fallback: Discover users from leaderboard and chores
+                        if not self._available_users:
+                            _LOGGER.info(
+                                "Falling back to user discovery from leaderboard and chores"
+                            )
+                            users_set = set()
 
-                        # 3. Get users from late chores
-                        try:
-                            late = await api_client.get_late_chores()
-                            for chore in late:
-                                if assigned_to := chore.get("assigned_to"):
-                                    if isinstance(assigned_to, dict):
-                                        username = assigned_to.get("username", "")
-                                        display_name = assigned_to.get(
-                                            "display_name", username
-                                        )
-                                        if username:
-                                            users_set.add((username, display_name))
-                        except ChoreboardAPIError as err:
-                            _LOGGER.debug("Could not fetch late chores: %s", err)
+                            # 1. Get users from leaderboard (users with points)
+                            try:
+                                leaderboard = await api_client.get_leaderboard(
+                                    "alltime"
+                                )
+                                for entry in leaderboard:
+                                    user_data = entry.get("user", entry)
+                                    username = user_data.get("username", "")
+                                    display_name = user_data.get(
+                                        "display_name", username
+                                    )
+                                    if username:
+                                        users_set.add((username, display_name))
+                            except ChoreboardAPIError as err:
+                                _LOGGER.debug("Could not fetch leaderboard: %s", err)
 
-                        # Convert to sorted list
-                        self._available_users = [
-                            {"username": u, "display_name": d}
-                            for u, d in sorted(users_set)
-                        ]
+                            # 2. Get users from outstanding chores
+                            try:
+                                outstanding = await api_client.get_outstanding_chores()
+                                for chore in outstanding:
+                                    if assigned_to := chore.get("assigned_to"):
+                                        if isinstance(assigned_to, dict):
+                                            username = assigned_to.get("username", "")
+                                            display_name = assigned_to.get(
+                                                "display_name", username
+                                            )
+                                            if username:
+                                                users_set.add((username, display_name))
+                            except ChoreboardAPIError as err:
+                                _LOGGER.debug(
+                                    "Could not fetch outstanding chores: %s", err
+                                )
+
+                            # 3. Get users from late chores
+                            try:
+                                late = await api_client.get_late_chores()
+                                for chore in late:
+                                    if assigned_to := chore.get("assigned_to"):
+                                        if isinstance(assigned_to, dict):
+                                            username = assigned_to.get("username", "")
+                                            display_name = assigned_to.get(
+                                                "display_name", username
+                                            )
+                                            if username:
+                                                users_set.add((username, display_name))
+                            except ChoreboardAPIError as err:
+                                _LOGGER.debug("Could not fetch late chores: %s", err)
+
+                            # Convert to sorted list
+                            self._available_users = [
+                                {"username": u, "display_name": d}
+                                for u, d in sorted(users_set)
+                            ]
+
+                            if self._available_users:
+                                _LOGGER.info(
+                                    "Found %d users from fallback discovery",
+                                    len(self._available_users),
+                                )
 
                         if not self._available_users:
                             _LOGGER.warning(
-                                "No users found in leaderboard or chores. User may need to enter manually."
+                                "No users found via any method. User may need to enter manually."
                             )
 
                     except Exception as err:
@@ -342,51 +382,83 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
                 session,
             )
 
-            # Fetch users from multiple sources (same logic as config flow)
-            users_set = set()
-
-            # 1. Get users from leaderboard
+            # Primary method: Use dedicated users endpoint
             try:
-                leaderboard = await api_client.get_leaderboard("alltime")
-                for entry in leaderboard:
-                    user_data = entry.get("user", entry)
-                    username = user_data.get("username", "")
-                    display_name = user_data.get("display_name", username)
-                    if username:
-                        users_set.add((username, display_name))
+                users_data = await api_client.get_users()
+                if users_data:
+                    self._available_users = [
+                        {
+                            "username": user.get("username", ""),
+                            "display_name": user.get(
+                                "display_name", user.get("username", "Unknown")
+                            ),
+                        }
+                        for user in users_data
+                        if user.get("username")
+                    ]
+                    _LOGGER.info(
+                        "Found %d users from /api/users/ endpoint for options flow",
+                        len(self._available_users),
+                    )
             except ChoreboardAPIError as err:
-                _LOGGER.debug("Could not fetch leaderboard: %s", err)
+                _LOGGER.warning("Could not fetch users from API: %s", err)
+                self._available_users = []
 
-            # 2. Get users from outstanding chores
-            try:
-                outstanding = await api_client.get_outstanding_chores()
-                for chore in outstanding:
-                    if assigned_to := chore.get("assigned_to"):
-                        if isinstance(assigned_to, dict):
-                            username = assigned_to.get("username", "")
-                            display_name = assigned_to.get("display_name", username)
-                            if username:
-                                users_set.add((username, display_name))
-            except ChoreboardAPIError as err:
-                _LOGGER.debug("Could not fetch outstanding chores: %s", err)
+            # Fallback: Discover users from leaderboard and chores
+            if not self._available_users:
+                _LOGGER.info(
+                    "Falling back to user discovery from leaderboard and chores"
+                )
+                users_set = set()
 
-            # 3. Get users from late chores
-            try:
-                late = await api_client.get_late_chores()
-                for chore in late:
-                    if assigned_to := chore.get("assigned_to"):
-                        if isinstance(assigned_to, dict):
-                            username = assigned_to.get("username", "")
-                            display_name = assigned_to.get("display_name", username)
-                            if username:
-                                users_set.add((username, display_name))
-            except ChoreboardAPIError as err:
-                _LOGGER.debug("Could not fetch late chores: %s", err)
+                # 1. Get users from leaderboard
+                try:
+                    leaderboard = await api_client.get_leaderboard("alltime")
+                    for entry in leaderboard:
+                        user_data = entry.get("user", entry)
+                        username = user_data.get("username", "")
+                        display_name = user_data.get("display_name", username)
+                        if username:
+                            users_set.add((username, display_name))
+                except ChoreboardAPIError as err:
+                    _LOGGER.debug("Could not fetch leaderboard: %s", err)
 
-            # Convert to sorted list
-            self._available_users = [
-                {"username": u, "display_name": d} for u, d in sorted(users_set)
-            ]
+                # 2. Get users from outstanding chores
+                try:
+                    outstanding = await api_client.get_outstanding_chores()
+                    for chore in outstanding:
+                        if assigned_to := chore.get("assigned_to"):
+                            if isinstance(assigned_to, dict):
+                                username = assigned_to.get("username", "")
+                                display_name = assigned_to.get("display_name", username)
+                                if username:
+                                    users_set.add((username, display_name))
+                except ChoreboardAPIError as err:
+                    _LOGGER.debug("Could not fetch outstanding chores: %s", err)
+
+                # 3. Get users from late chores
+                try:
+                    late = await api_client.get_late_chores()
+                    for chore in late:
+                        if assigned_to := chore.get("assigned_to"):
+                            if isinstance(assigned_to, dict):
+                                username = assigned_to.get("username", "")
+                                display_name = assigned_to.get("display_name", username)
+                                if username:
+                                    users_set.add((username, display_name))
+                except ChoreboardAPIError as err:
+                    _LOGGER.debug("Could not fetch late chores: %s", err)
+
+                # Convert to sorted list
+                self._available_users = [
+                    {"username": u, "display_name": d} for u, d in sorted(users_set)
+                ]
+
+                if self._available_users:
+                    _LOGGER.info(
+                        "Found %d users from fallback discovery",
+                        len(self._available_users),
+                    )
 
         except Exception as err:
             _LOGGER.warning("Error fetching users for options: %s", err)

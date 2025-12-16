@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add/remove monitored users dynamically
   - Update credentials and backend URL
   - All changes applied immediately with automatic reload
+- **Enhanced User Discovery** - All users now exposed in setup and options
+  - Primary method: Fetch directly from `/api/users/` endpoint
+  - Fallback method: Discover from leaderboard and chores
+  - Shows all users including those with no chores or points
+  - Comprehensive logging for debugging user discovery issues
 
 ### Changed
 - Service handlers now trigger immediate coordinator refresh for responsive UI updates
@@ -31,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Background polling occurs only when no recent user actions have triggered updates
 - Options flow replaced with menu-based interface (3 configuration categories)
 - Config entry updates now stored in `data` instead of `options` for consistency
+- User discovery now prioritizes `/api/users/` endpoint over leaderboard/chores discovery
+- User fetching logic unified between initial setup and options flow
+
+### Fixed
+- **User Picker Missing Users** - Setup and options now show ALL users from backend
+  - Previously only showed users with chores or points
+  - New users without activity are now visible
+  - Inactive users are now selectable during setup
+  - Resolves issue where some users couldn't be monitored
 
 ### Improved
 - User experience: Data updates within 2 seconds of service calls instead of up to 5 minutes
@@ -38,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Coordinator architecture: Cleaner separation between scheduled and action-triggered updates
 - Configuration flexibility: All settings reconfigurable without removing/re-adding integration
 - Credential updates: Can change backend URL or credentials after initial setup
+- User discovery reliability: Two-tier approach ensures all users found even if API fails
 
 ### Technical
 - Added `CONF_SCAN_INTERVAL` configuration constant
@@ -46,6 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented menu-based options flow with 3 steps (scan_interval, monitored_users, credentials)
 - Each options step validates input and reloads integration automatically
 - Removed redundant update listener (reload handled directly in options flow)
+- Updated user fetching to use `api_client.get_users()` as primary method
+- Added comprehensive logging (INFO/WARNING/DEBUG) for user discovery process
+- Fallback user discovery maintains backward compatibility with older backends
 - All code quality checks passing (ruff, mypy)
 
 ## [1.2.0] - 2025-12-16
