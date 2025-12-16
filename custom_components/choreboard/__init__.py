@@ -101,7 +101,7 @@ SERVICE_CANCEL_ARCADE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  # noqa: C901
     """Set up ChoreBoard from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
