@@ -317,6 +317,40 @@ The manifest.json must include these required fields:
 - `iot_class`: How the integration communicates (`cloud_polling`, `local_polling`, etc.)
 - `integration_type`: `hub`, `service`, or `device`
 
+## Sensor Attributes
+
+All ChoreBoard sensors include a `users` array in their attributes for use by the ChoreBoard Card's user selection dialogs.
+
+### Users Array Structure
+
+```python
+"users": [
+    {
+        "id": 1,                       # User ID for API calls
+        "username": "ash",             # Login username
+        "display_name": "Ash",         # Display name
+        "first_name": "Ash",           # First name
+        "can_be_assigned": true,       # Can receive assignments
+        "eligible_for_points": true,   # Can earn points
+        "weekly_points": "25.00",      # This week's points
+        "all_time_points": "150.00",   # Total points ever
+        "claims_today": 2              # Claims made today (optional)
+    }
+]
+```
+
+### Dedicated Users Sensor
+
+`sensor.users` provides a dedicated sensor for accessing all users:
+- **State**: Number of users
+- **Attributes**:
+  - `users`: Full users array
+  - `count`: Number of users
+
+### Usage in Card
+
+The ChoreBoard Card searches all ChoreBoard sensors for the `users` array when displaying user selection dialogs for pool chores. Having users in all sensors ensures the card can always find the data regardless of which sensor is configured.
+
 ## Testing Patterns
 
 ### Basic Test Structure
