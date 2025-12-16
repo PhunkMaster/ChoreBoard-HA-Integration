@@ -1,6 +1,6 @@
 mark_complete:
   name: Mark chore complete
-  description: Mark a chore as completed, optionally with helper credits
+  description: Mark a chore as completed, optionally with helper credits and on behalf of another user
   fields:
     chore_id:
       name: Chore Instance ID
@@ -18,16 +18,34 @@ mark_complete:
       example: [2, 3]
       selector:
         object:
+    completed_by_user_id:
+      name: Completed By User ID
+      description: Optional user ID of who completed the chore (defaults to authenticated user)
+      required: false
+      example: 5
+      selector:
+        number:
+          min: 1
+          mode: box
 
 claim_chore:
   name: Claim chore
-  description: Claim a pool chore for the authenticated user
+  description: Claim a pool chore for the authenticated user or assign it to another user
   fields:
     chore_id:
       name: Chore Instance ID
       description: The ID of the pool chore instance to claim
       required: true
       example: 42
+      selector:
+        number:
+          min: 1
+          mode: box
+    assign_to_user_id:
+      name: Assign To User ID
+      description: Optional user ID to assign the chore to (defaults to authenticated user)
+      required: false
+      example: 3
       selector:
         number:
           min: 1

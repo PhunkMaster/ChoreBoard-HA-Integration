@@ -12,7 +12,9 @@ from homeassistant.helpers import config_validation as cv
 
 from .api_client import ChoreboardAPIError
 from .const import (
+    ATTR_ASSIGN_TO_USER_ID,
     ATTR_CHORE_ID,
+    ATTR_COMPLETED_BY_USER_ID,
     ATTR_HELPERS,
     DOMAIN,
     PLATFORMS,
@@ -29,12 +31,14 @@ SERVICE_MARK_COMPLETE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CHORE_ID): cv.positive_int,
         vol.Optional(ATTR_HELPERS): vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Optional(ATTR_COMPLETED_BY_USER_ID): cv.positive_int,
     }
 )
 
 SERVICE_CLAIM_CHORE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CHORE_ID): cv.positive_int,
+        vol.Optional(ATTR_ASSIGN_TO_USER_ID): cv.positive_int,
     }
 )
 
@@ -72,11 +76,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle the mark_complete service call."""
         instance_id = call.data[ATTR_CHORE_ID]
         helper_ids = call.data.get(ATTR_HELPERS)
+        completed_by_user_id = call.data.get(ATTR_COMPLETED_BY_USER_ID)
 
-        _LOGGER.debug("Mark complete service called for chore instance %s", instance_id)
+        _LOGGER.debug(
+            "Mark complete service called for chore instance %s (completed_by: %s, helpers: %s)",
+            instance_id,
+            completed_by_user_id,
+            helper_ids,
+        )
 
         try:
-            await coordinator.api_client.complete_chore(instance_id, helper_ids)
+            await coordinator.api_client.complete_chore(
+                instance_id, helper_ids, completed_by_user_id
+            )
             await coordinator.async_request_refresh()
             _LOGGER.info("Successfully completed chore instance %s", instance_id)
         except ChoreboardAPIError as err:
@@ -86,11 +98,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_claim_chore(call: ServiceCall) -> None:
         """Handle the claim_chore service call."""
         instance_id = call.data[ATTR_CHORE_ID]
+        assign_to_user_id = call.data.get(ATTR_ASSIGN_TO_USER_ID)
 
-        _LOGGER.debug("Claim chore service called for chore instance %s", instance_id)
+        _LOGGER.debug(
+            "Claim chore service called for chore instance %s (assign_to: %s)",
+            instance_id,
+            assign_to_user_id,
+        )
 
         try:
-            await coordinator.api_client.claim_chore(instance_id)
+            await coordinator.api_client.claim_chore(instance_id, assign_to_user_id)
             await coordinator.async_request_refresh()
             _LOGGER.info("Successfully claimed chore instance %s", instance_id)
         except ChoreboardAPIError as err:

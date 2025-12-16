@@ -155,6 +155,9 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "outstanding_chores": [...],  # List of all outstanding chores
             "late_chores": [...],          # List of all overdue chores
             "pool_chores": [...],          # List of unassigned pool chores
+            "users": [...],                # List of all users with points data
+            "recent_completions": [...],   # Recent completion history
+            "chore_leaderboards": [...],   # Arcade mode leaderboards for chores
             "leaderboard_weekly": [...],   # Weekly leaderboard data
             "leaderboard_alltime": [...],  # All-time leaderboard data
             "my_chores": {                 # Per-user chore data
@@ -169,6 +172,9 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Fetch system-wide data (parallel requests)
             outstanding_chores_raw = await self.api_client.get_outstanding_chores()
             late_chores_raw = await self.api_client.get_late_chores()
+            users = await self.api_client.get_users()
+            recent_completions = await self.api_client.get_recent_completions(limit=20)
+            chore_leaderboards = await self.api_client.get_chore_leaderboards()
             leaderboard_weekly = await self.api_client.get_leaderboard("weekly")
             leaderboard_alltime = await self.api_client.get_leaderboard("alltime")
 
@@ -227,16 +233,22 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "outstanding_chores": outstanding_chores,
                 "late_chores": late_chores,
                 "pool_chores": pool_chores,
+                "users": users,
+                "recent_completions": recent_completions,
+                "chore_leaderboards": chore_leaderboards,
                 "leaderboard_weekly": leaderboard_weekly,
                 "leaderboard_alltime": leaderboard_alltime,
                 "my_chores": my_chores_data,
             }
 
             _LOGGER.debug(
-                "Successfully fetched data: %d outstanding, %d late, %d pool, %d users monitored",
+                "Successfully fetched data: %d outstanding, %d late, %d pool, %d users, %d completions, %d chore leaderboards, %d monitored",
                 len(outstanding_chores),
                 len(late_chores),
                 len(pool_chores),
+                len(users),
+                len(recent_completions),
+                len(chore_leaderboards),
                 len(self.monitored_users),
             )
 
