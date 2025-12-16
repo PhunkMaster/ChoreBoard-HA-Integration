@@ -302,6 +302,138 @@ class ChoreboardAPIClient:
         )
         return data if isinstance(data, dict) else {}
 
+    async def start_arcade(
+        self, instance_id: int, user_id: int | None = None
+    ) -> dict[str, Any]:
+        """Start arcade mode for a chore instance.
+
+        Args:
+            instance_id: ID of the chore instance to arcade
+            user_id: Optional user ID to start arcade for
+
+        Returns:
+            Dict with success status, message, session_id, and session details
+        """
+        json_data: dict[str, Any] = {"instance_id": instance_id}
+        if user_id is not None:
+            json_data["user_id"] = user_id
+
+        data = await self._request("POST", "/api/arcade/start/", json_data=json_data)
+        return data if isinstance(data, dict) else {}
+
+    async def stop_arcade(self, session_id: int) -> dict[str, Any]:
+        """Stop arcade timer and prepare for judging.
+
+        Args:
+            session_id: ID of the arcade session to stop
+
+        Returns:
+            Dict with success status, elapsed time, and session details
+        """
+        data = await self._request(
+            "POST", "/api/arcade/stop/", json_data={"session_id": session_id}
+        )
+        return data if isinstance(data, dict) else {}
+
+    async def approve_arcade(
+        self, session_id: int, judge_id: int | None = None, notes: str = ""
+    ) -> dict[str, Any]:
+        """Judge approves arcade completion.
+
+        Args:
+            session_id: ID of the arcade session to approve
+            judge_id: Optional judge user ID
+            notes: Optional judge notes
+
+        Returns:
+            Dict with success status, points awarded, and completion details
+        """
+        json_data: dict[str, Any] = {"session_id": session_id}
+        if judge_id is not None:
+            json_data["judge_id"] = judge_id
+        if notes:
+            json_data["notes"] = notes
+
+        data = await self._request("POST", "/api/arcade/approve/", json_data=json_data)
+        return data if isinstance(data, dict) else {}
+
+    async def deny_arcade(
+        self, session_id: int, judge_id: int | None = None, notes: str = ""
+    ) -> dict[str, Any]:
+        """Judge denies arcade completion.
+
+        Args:
+            session_id: ID of the arcade session to deny
+            judge_id: Optional judge user ID
+            notes: Optional judge notes
+
+        Returns:
+            Dict with success status and message
+        """
+        json_data: dict[str, Any] = {"session_id": session_id}
+        if judge_id is not None:
+            json_data["judge_id"] = judge_id
+        if notes:
+            json_data["notes"] = notes
+
+        data = await self._request("POST", "/api/arcade/deny/", json_data=json_data)
+        return data if isinstance(data, dict) else {}
+
+    async def continue_arcade(self, session_id: int) -> dict[str, Any]:
+        """Continue arcade after denial.
+
+        Args:
+            session_id: ID of the arcade session to continue
+
+        Returns:
+            Dict with success status and resumed session details
+        """
+        data = await self._request(
+            "POST", "/api/arcade/continue/", json_data={"session_id": session_id}
+        )
+        return data if isinstance(data, dict) else {}
+
+    async def cancel_arcade(self, session_id: int) -> dict[str, Any]:
+        """Cancel arcade mode.
+
+        Args:
+            session_id: ID of the arcade session to cancel
+
+        Returns:
+            Dict with success status and message
+        """
+        data = await self._request(
+            "POST", "/api/arcade/cancel/", json_data={"session_id": session_id}
+        )
+        return data if isinstance(data, dict) else {}
+
+    async def get_arcade_status(self, user_id: int | None = None) -> dict[str, Any]:
+        """Get active arcade session status for a user.
+
+        Args:
+            user_id: Optional user ID to check (defaults to authenticated user)
+
+        Returns:
+            Dict with has_active_session flag and session details if active
+        """
+        params: dict[str, str] = {}
+        if user_id is not None:
+            params["user_id"] = str(user_id)
+
+        data = await self._request("GET", "/api/arcade/status/", params=params)
+        return data if isinstance(data, dict) else {}
+
+    async def get_pending_arcade_approvals(self) -> list[dict[str, Any]]:
+        """Get list of arcade sessions awaiting judge approval.
+
+        Returns:
+            List of pending arcade session dictionaries
+        """
+        data = await self._request("GET", "/api/arcade/pending/")
+        if isinstance(data, dict) and "pending_sessions" in data:
+            return data["pending_sessions"]
+        return []
+
     async def test_connection(self) -> bool:
         """Test the API connection and authentication.
 

@@ -64,3 +64,128 @@ undo_completion:
         number:
           min: 1
           mode: box
+
+start_arcade:
+  name: Start arcade mode
+  description: Start arcade mode timer for a chore instance
+  fields:
+    instance_id:
+      name: Chore Instance ID
+      description: The ID of the chore instance to start arcade mode for
+      required: true
+      example: 42
+      selector:
+        number:
+          min: 1
+          mode: box
+    user_id:
+      name: User ID
+      description: Optional user ID to start arcade for (defaults to authenticated user)
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 1
+          mode: box
+
+stop_arcade:
+  name: Stop arcade mode
+  description: Stop arcade timer and prepare for judging
+  fields:
+    session_id:
+      name: Arcade Session ID
+      description: The ID of the arcade session to stop
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+
+approve_arcade:
+  name: Approve arcade completion
+  description: Judge approves arcade completion
+  fields:
+    session_id:
+      name: Arcade Session ID
+      description: The ID of the arcade session to approve
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+    judge_id:
+      name: Judge User ID
+      description: Optional judge user ID (defaults to authenticated user)
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 1
+          mode: box
+    notes:
+      name: Judge Notes
+      description: Optional notes from the judge
+      required: false
+      example: "Great job!"
+      selector:
+        text:
+
+deny_arcade:
+  name: Deny arcade completion
+  description: Judge denies arcade completion
+  fields:
+    session_id:
+      name: Arcade Session ID
+      description: The ID of the arcade session to deny
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+    judge_id:
+      name: Judge User ID
+      description: Optional judge user ID (defaults to authenticated user)
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 1
+          mode: box
+    notes:
+      name: Judge Notes
+      description: Optional notes from the judge
+      required: false
+      example: "Chore not fully complete"
+      selector:
+        text:
+
+continue_arcade:
+  name: Continue arcade mode
+  description: Resume arcade timer after denial
+  fields:
+    session_id:
+      name: Arcade Session ID
+      description: The ID of the arcade session to continue
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box
+
+cancel_arcade:
+  name: Cancel arcade mode
+  description: Cancel arcade mode and return chore to pool
+  fields:
+    session_id:
+      name: Arcade Session ID
+      description: The ID of the arcade session to cancel
+      required: true
+      example: 123
+      selector:
+        number:
+          min: 1
+          mode: box

@@ -125,6 +125,86 @@
           "description": "The ID of the completion to undo"
         }
       }
+    },
+    "start_arcade": {
+      "name": "Start arcade mode",
+      "description": "Start arcade mode timer for a chore instance",
+      "fields": {
+        "instance_id": {
+          "name": "Chore Instance ID",
+          "description": "The ID of the chore instance to start arcade mode for"
+        },
+        "user_id": {
+          "name": "User ID",
+          "description": "Optional user ID to start arcade for (defaults to authenticated user)"
+        }
+      }
+    },
+    "stop_arcade": {
+      "name": "Stop arcade mode",
+      "description": "Stop arcade timer and prepare for judging",
+      "fields": {
+        "session_id": {
+          "name": "Arcade Session ID",
+          "description": "The ID of the arcade session to stop"
+        }
+      }
+    },
+    "approve_arcade": {
+      "name": "Approve arcade completion",
+      "description": "Judge approves arcade completion",
+      "fields": {
+        "session_id": {
+          "name": "Arcade Session ID",
+          "description": "The ID of the arcade session to approve"
+        },
+        "judge_id": {
+          "name": "Judge User ID",
+          "description": "Optional judge user ID (defaults to authenticated user)"
+        },
+        "notes": {
+          "name": "Judge Notes",
+          "description": "Optional notes from the judge"
+        }
+      }
+    },
+    "deny_arcade": {
+      "name": "Deny arcade completion",
+      "description": "Judge denies arcade completion",
+      "fields": {
+        "session_id": {
+          "name": "Arcade Session ID",
+          "description": "The ID of the arcade session to deny"
+        },
+        "judge_id": {
+          "name": "Judge User ID",
+          "description": "Optional judge user ID (defaults to authenticated user)"
+        },
+        "notes": {
+          "name": "Judge Notes",
+          "description": "Optional notes from the judge"
+        }
+      }
+    },
+    "continue_arcade": {
+      "name": "Continue arcade mode",
+      "description": "Resume arcade timer after denial",
+      "fields": {
+        "session_id": {
+          "name": "Arcade Session ID",
+          "description": "The ID of the arcade session to continue"
+        }
+      }
+    },
+    "cancel_arcade": {
+      "name": "Cancel arcade mode",
+      "description": "Cancel arcade mode and return chore to pool",
+      "fields": {
+        "session_id": {
+          "name": "Arcade Session ID",
+          "description": "The ID of the arcade session to cancel"
+        }
+      }
     }
   }
 }
