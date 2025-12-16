@@ -22,6 +22,7 @@ A Home Assistant custom integration for ChoreBoard, enabling you to track chores
 - Completion information on all chores (who, when, helpers)
 - Point tracking for gamification
 - Weekly and all-time leaderboards
+- **User Selection Dialogs**: All sensors include users data for card user selection features
 
 ## Installation
 

@@ -5,6 +5,22 @@ All notable changes to the ChoreBoard Home Assistant Integration will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-16
+
+### Added
+- **Users Sensor** (`sensor.users`) - Dedicated sensor exposing all ChoreBoard users with stats
+- **Users array in all sensors** - All ChoreBoard sensors now include `users` attribute for card compatibility
+- Users data includes `id`, `username`, `display_name`, `first_name`, points, and assignment eligibility
+- `format_users_for_attributes()` helper function for consistent user data formatting across sensors
+
+### Changed
+- All sensor attributes now include full users list for ChoreBoard Card pool chores feature
+- Enhanced sensor attributes to support user selection dialogs in the ChoreBoard Card
+
+### Documentation
+- Added Sensor Attributes section to CLAUDE.md with users array structure
+- Updated README.md with User Selection Dialogs feature
+
 ## [1.1.0] - 2025-12-15
 
 ### Added

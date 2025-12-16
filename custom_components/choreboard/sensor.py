@@ -17,6 +17,40 @@ from .coordinator import ChoreboardCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def format_users_for_attributes(
+    coordinator_data: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Format users data for sensor attributes.
+
+    Args:
+        coordinator_data: The coordinator's data dictionary
+
+    Returns:
+        List of formatted user dictionaries
+    """
+    users = coordinator_data.get("users", [])
+    user_list = []
+
+    for user in users:
+        user_info = {
+            "id": user.get("id"),
+            "username": user.get("username", "Unknown"),
+            "display_name": user.get("display_name", user.get("username", "Unknown")),
+            "first_name": user.get("first_name", ""),
+            "can_be_assigned": user.get("can_be_assigned", True),
+            "eligible_for_points": user.get("eligible_for_points", True),
+            "weekly_points": str(user.get("weekly_points", 0)),
+            "all_time_points": str(user.get("all_time_points", 0)),
+        }
+
+        if "claims_today" in user:
+            user_info["claims_today"] = user.get("claims_today", 0)
+
+        user_list.append(user_info)
+
+    return user_list
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -35,6 +69,7 @@ async def async_setup_entry(
     entities.append(ChoreboardCompletionHistorySensor(coordinator))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "weekly"))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "alltime"))
+    entities.append(ChoreboardUsersSensor(coordinator))
 
     # Create chore leaderboard sensors (arcade mode)
     chore_leaderboards = coordinator.data.get("chore_leaderboards", [])
@@ -123,6 +158,7 @@ class ChoreboardOutstandingSensor(
         return {
             "chores": chore_list,
             "count": len(chores),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
     def _format_assignee(self, assigned_to: Any) -> str:
@@ -195,6 +231,7 @@ class ChoreboardLateSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
         return {
             "chores": chore_list,
             "count": len(chores),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
     def _format_assignee(self, assigned_to: Any) -> str:
@@ -267,6 +304,7 @@ class ChoreboardPoolSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
         return {
             "chores": chore_list,
             "count": len(chores),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -329,6 +367,7 @@ class ChoreboardChoreBreakdownSensor(
             "status_breakdown": status_counts,
             "outstanding_count": len(outstanding),
             "late_count": len(late),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -460,6 +499,7 @@ class ChoreboardMyChoresSensor(CoordinatorEntity[ChoreboardCoordinator], SensorE
             "username": self._username,
             "chores": chore_list,
             "count": len(chores),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -544,6 +584,7 @@ class ChoreboardMyImmediateChoresSensor(
             "count": len(immediate_chores),
             "total_chores": len(chores),
             "complete_later_chores": len(chores) - len(immediate_chores),
+            "users": format_users_for_attributes(self.coordinator.data),
         }
 
 
@@ -754,4 +795,33 @@ class ChoreboardUserAllTimePointsSensor(
         return {
             "username": self._username,
             "points": 0.0,
+        }
+
+
+class ChoreboardUsersSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntity):
+    """Sensor for all ChoreBoard users."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:account-group"
+
+    def __init__(self, coordinator: ChoreboardCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_users"
+        self._attr_name = "Users"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of users."""
+        users = self.coordinator.data.get("users", [])
+        return len(users)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        user_list = format_users_for_attributes(self.coordinator.data)
+
+        return {
+            "users": user_list,
+            "count": len(user_list),
         }
