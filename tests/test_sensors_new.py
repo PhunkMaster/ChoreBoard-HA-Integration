@@ -1,8 +1,8 @@
 """Tests for new ChoreBoard sensors."""
 
 import pytest
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.choreboard.const import (
     CONF_MONITORED_USERS,
@@ -16,30 +16,19 @@ from custom_components.choreboard.const import (
 @pytest.fixture
 async def setup_integration(hass, mock_choreboard_api):
     """Set up the ChoreBoard integration for testing."""
-    config_entry = await _create_config_entry(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    return config_entry
-
-
-async def _create_config_entry(hass):
-    """Create a mock config entry."""
-    entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=1,
+    entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Test ChoreBoard",
         data={
             CONF_USERNAME: "testuser",
             CONF_SECRET_KEY: "testsecret",
             CONF_URL: "http://localhost:8000",
             CONF_MONITORED_USERS: ["testuser"],
         },
-        source="user",
-        entry_id="test_entry_id",
-        unique_id="test_unique_id",
     )
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     return entry
 
 
@@ -157,7 +146,9 @@ async def test_completion_information_in_chores(hass: HomeAssistant, setup_integ
 
 
 @pytest.mark.asyncio
-async def test_my_chores_sensor_with_completion_data(hass: HomeAssistant, setup_integration):
+async def test_my_chores_sensor_with_completion_data(
+    hass: HomeAssistant, setup_integration
+):
     """Test that my chores sensor includes completion data."""
     state = hass.states.get("sensor.choreboard_testuser_my_chores")
     assert state is not None

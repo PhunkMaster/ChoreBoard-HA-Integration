@@ -3,9 +3,9 @@
 from unittest.mock import patch
 
 import pytest
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.choreboard.const import (
     ATTR_ASSIGN_TO_USER_ID,
@@ -26,21 +26,17 @@ from custom_components.choreboard.const import (
 @pytest.fixture
 async def setup_integration(hass):
     """Set up the ChoreBoard integration for testing."""
-    with patch("custom_components.choreboard.coordinator.ChoreboardCoordinator._async_update_data"):
-        entry = config_entries.ConfigEntry(
-            version=1,
-            minor_version=1,
+    with patch(
+        "custom_components.choreboard.coordinator.ChoreboardCoordinator._async_update_data"
+    ):
+        entry = MockConfigEntry(
             domain=DOMAIN,
-            title="Test ChoreBoard",
             data={
                 CONF_USERNAME: "testuser",
                 CONF_SECRET_KEY: "testsecret",
                 CONF_URL: "http://localhost:8000",
                 CONF_MONITORED_USERS: ["testuser"],
             },
-            source="user",
-            entry_id="test_entry_id",
-            unique_id="test_unique_id",
         )
         entry.add_to_hass(hass)
 
@@ -88,7 +84,9 @@ async def test_mark_complete_with_helpers(hass: HomeAssistant, setup_integration
 
 
 @pytest.mark.asyncio
-async def test_mark_complete_with_completed_by_user_id(hass: HomeAssistant, setup_integration):
+async def test_mark_complete_with_completed_by_user_id(
+    hass: HomeAssistant, setup_integration
+):
     """Test mark_complete service with completed_by_user_id."""
     with patch(
         "custom_components.choreboard.api_client.ChoreboardAPIClient.complete_chore"
@@ -107,7 +105,9 @@ async def test_mark_complete_with_completed_by_user_id(hass: HomeAssistant, setu
 
 
 @pytest.mark.asyncio
-async def test_mark_complete_with_all_parameters(hass: HomeAssistant, setup_integration):
+async def test_mark_complete_with_all_parameters(
+    hass: HomeAssistant, setup_integration
+):
     """Test mark_complete service with all optional parameters."""
     with patch(
         "custom_components.choreboard.api_client.ChoreboardAPIClient.complete_chore"
@@ -149,7 +149,9 @@ async def test_claim_chore_basic(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
-async def test_claim_chore_with_assign_to_user_id(hass: HomeAssistant, setup_integration):
+async def test_claim_chore_with_assign_to_user_id(
+    hass: HomeAssistant, setup_integration
+):
     """Test claim_chore service with assign_to_user_id."""
     with patch(
         "custom_components.choreboard.api_client.ChoreboardAPIClient.claim_chore"
@@ -208,11 +210,14 @@ async def test_service_error_handling(hass: HomeAssistant, setup_integration):
 @pytest.mark.asyncio
 async def test_service_triggers_refresh(hass: HomeAssistant, setup_integration):
     """Test that services trigger coordinator refresh."""
-    with patch(
-        "custom_components.choreboard.api_client.ChoreboardAPIClient.complete_chore"
-    ) as mock_complete, patch(
-        "custom_components.choreboard.coordinator.ChoreboardCoordinator.async_request_refresh"
-    ) as mock_refresh:
+    with (
+        patch(
+            "custom_components.choreboard.api_client.ChoreboardAPIClient.complete_chore"
+        ) as mock_complete,
+        patch(
+            "custom_components.choreboard.coordinator.ChoreboardCoordinator.async_request_refresh"
+        ) as mock_refresh,
+    ):
         mock_complete.return_value = {"success": True}
 
         await hass.services.async_call(
