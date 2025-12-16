@@ -46,6 +46,7 @@ async def setup_integration(hass):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_mark_complete_basic(hass: HomeAssistant, setup_integration):
     """Test mark_complete service with basic parameters."""
     with patch(
@@ -65,6 +66,7 @@ async def test_mark_complete_basic(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_mark_complete_with_helpers(hass: HomeAssistant, setup_integration):
     """Test mark_complete service with helpers."""
     with patch(
@@ -84,6 +86,7 @@ async def test_mark_complete_with_helpers(hass: HomeAssistant, setup_integration
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_mark_complete_with_completed_by_user_id(
     hass: HomeAssistant, setup_integration
 ):
@@ -105,6 +108,7 @@ async def test_mark_complete_with_completed_by_user_id(
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_mark_complete_with_all_parameters(
     hass: HomeAssistant, setup_integration
 ):
@@ -130,6 +134,7 @@ async def test_mark_complete_with_all_parameters(
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_claim_chore_basic(hass: HomeAssistant, setup_integration):
     """Test claim_chore service with basic parameters."""
     with patch(
@@ -149,6 +154,7 @@ async def test_claim_chore_basic(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_claim_chore_with_assign_to_user_id(
     hass: HomeAssistant, setup_integration
 ):
@@ -170,6 +176,7 @@ async def test_claim_chore_with_assign_to_user_id(
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_undo_completion(hass: HomeAssistant, setup_integration):
     """Test undo_completion service."""
     with patch(
@@ -189,6 +196,7 @@ async def test_undo_completion(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_service_error_handling(hass: HomeAssistant, setup_integration):
     """Test service error handling."""
     from custom_components.choreboard.api_client import ChoreboardAPIError
@@ -208,6 +216,7 @@ async def test_service_error_handling(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_service_triggers_refresh(hass: HomeAssistant, setup_integration):
     """Test that services trigger coordinator refresh."""
     with (

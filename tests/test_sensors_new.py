@@ -33,6 +33,7 @@ async def setup_integration(hass, mock_choreboard_api):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_pool_chores_sensor(hass: HomeAssistant, setup_integration):
     """Test pool chores sensor."""
     state = hass.states.get("sensor.choreboard_pool_chores")
@@ -47,6 +48,7 @@ async def test_pool_chores_sensor(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_chore_breakdown_sensor(hass: HomeAssistant, setup_integration):
     """Test chore breakdown statistics sensor."""
     state = hass.states.get("sensor.choreboard_chore_breakdown")
@@ -64,6 +66,7 @@ async def test_chore_breakdown_sensor(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_completion_history_sensor(hass: HomeAssistant, setup_integration):
     """Test completion history sensor."""
     state = hass.states.get("sensor.choreboard_completion_history")
@@ -83,6 +86,7 @@ async def test_completion_history_sensor(hass: HomeAssistant, setup_integration)
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_user_weekly_points_sensor(hass: HomeAssistant, setup_integration):
     """Test user weekly points sensor."""
     state = hass.states.get("sensor.choreboard_testuser_weekly_points")
@@ -97,6 +101,7 @@ async def test_user_weekly_points_sensor(hass: HomeAssistant, setup_integration)
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_user_alltime_points_sensor(hass: HomeAssistant, setup_integration):
     """Test user all-time points sensor."""
     state = hass.states.get("sensor.choreboard_testuser_alltime_points")
@@ -111,6 +116,7 @@ async def test_user_alltime_points_sensor(hass: HomeAssistant, setup_integration
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_chore_leaderboard_sensor(hass: HomeAssistant, setup_integration):
     """Test chore-specific leaderboard sensor (arcade mode)."""
     state = hass.states.get("sensor.choreboard_chore_leaderboard_1")
@@ -128,6 +134,7 @@ async def test_chore_leaderboard_sensor(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_completion_information_in_chores(hass: HomeAssistant, setup_integration):
     """Test that completion information is included in chore data."""
     # Check outstanding chores sensor
@@ -146,6 +153,7 @@ async def test_completion_information_in_chores(hass: HomeAssistant, setup_integ
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_my_chores_sensor_with_completion_data(
     hass: HomeAssistant, setup_integration
 ):
@@ -158,6 +166,7 @@ async def test_my_chores_sensor_with_completion_data(
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_sensor_icons(hass: HomeAssistant, setup_integration):
     """Test that sensors have appropriate icons."""
     # Pool chores should have pool icon
@@ -183,6 +192,7 @@ async def test_sensor_icons(hass: HomeAssistant, setup_integration):
 
 
 @pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_sensor_unit_of_measurement(hass: HomeAssistant, setup_integration):
     """Test that points sensors have correct unit of measurement."""
     # Weekly points
