@@ -42,7 +42,9 @@ async def async_setup_entry(
         chore_id = chore_lb.get("chore_id")
         chore_name = chore_lb.get("chore_name")
         if chore_id and chore_name:
-            entities.append(ChoreboardChoreLeaderboardSensor(coordinator, chore_id, chore_name))
+            entities.append(
+                ChoreboardChoreLeaderboardSensor(coordinator, chore_id, chore_name)
+            )
 
     # Create per-user sensors
     for username in coordinator.monitored_users:
@@ -645,7 +647,9 @@ class ChoreboardChoreLeaderboardSensor(
                     score_info = {
                         "rank": score.get("rank"),
                         "username": user.get("username", "Unknown"),
-                        "display_name": user.get("display_name", user.get("username", "Unknown")),
+                        "display_name": user.get(
+                            "display_name", user.get("username", "Unknown")
+                        ),
                         "time_seconds": score.get("time_seconds"),
                         "time_formatted": score.get("time_formatted"),
                         "achieved_at": score.get("achieved_at"),
