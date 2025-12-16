@@ -319,37 +319,71 @@ The manifest.json must include these required fields:
 
 ## Sensor Attributes
 
-All ChoreBoard sensors include a `users` array in their attributes for use by the ChoreBoard Card's user selection dialogs.
+### Users Array in All Sensors
 
-### Users Array Structure
+**All 12 ChoreBoard sensors** include a `users` array in their `extra_state_attributes` for use by the ChoreBoard Card's user selection dialogs (pool chores Claim and Complete features).
+
+#### Users Array Structure
 
 ```python
 "users": [
     {
-        "id": 1,                       # User ID for API calls
+        "id": 1,                       # User ID for API calls (REQUIRED)
         "username": "ash",             # Login username
         "display_name": "Ash",         # Display name
         "first_name": "Ash",           # First name
         "can_be_assigned": true,       # Can receive assignments
         "eligible_for_points": true,   # Can earn points
-        "weekly_points": "25.00",      # This week's points
-        "all_time_points": "150.00",   # Total points ever
-        "claims_today": 2              # Claims made today (optional)
+        "weekly_points": "25.00",      # This week's points (string format)
+        "all_time_points": "150.00",   # Total points ever (string format)
+        "claims_today": 2              # Claims made today (optional field)
     }
 ]
 ```
 
-### Dedicated Users Sensor
+**Important Notes**:
+- The `id` field is **REQUIRED** for ChoreBoard Card service calls (`claim_chore`, `mark_complete`)
+- Points fields are formatted as strings for consistency with API response format
+- The `claims_today` field is optional and only included if present in API response
 
-`sensor.users` provides a dedicated sensor for accessing all users:
-- **State**: Number of users
+#### Sensors with Users Array
+
+All sensors expose the users array:
+1. ChoreboardOutstandingSensor (`sensor.choreboard_outstanding`)
+2. ChoreboardLateSensor (`sensor.choreboard_late`)
+3. ChoreboardPoolSensor (`sensor.choreboard_pool`) - **Critical for pool chores**
+4. ChoreboardChoreBreakdownSensor (`sensor.choreboard_chore_breakdown`)
+5. ChoreboardCompletionHistorySensor (`sensor.choreboard_completion_history`)
+6. ChoreboardMyChoresSensor (`sensor.<username>_my_chores`)
+7. ChoreboardMyImmediateChoresSensor (`sensor.<username>_my_immediate_chores`)
+8. ChoreboardLeaderboardSensor (`sensor.choreboard_leaderboard_<type>`) - exposes as `all_users`
+9. ChoreboardChoreLeaderboardSensor (`sensor.choreboard_arcade_<chore_name>`)
+10. ChoreboardUserWeeklyPointsSensor (`sensor.<username>_weekly_points`)
+11. ChoreboardUserAllTimePointsSensor (`sensor.<username>_alltime_points`)
+12. ChoreboardUsersSensor (`sensor.choreboard_users`) - **Dedicated users sensor**
+
+#### Dedicated Users Sensor
+
+`sensor.choreboard_users` provides a dedicated sensor specifically for accessing all users:
+- **State**: Number of users (integer count)
 - **Attributes**:
-  - `users`: Full users array
+  - `users`: Full users array with all fields
   - `count`: Number of users
 
-### Usage in Card
+This sensor is the preferred source for user data but is not required - the card can find users from any ChoreBoard sensor.
 
-The ChoreBoard Card searches all ChoreBoard sensors for the `users` array when displaying user selection dialogs for pool chores. Having users in all sensors ensures the card can always find the data regardless of which sensor is configured.
+#### Usage in ChoreBoard Card
+
+The ChoreBoard Card's `getUsers()` method searches all `sensor.choreboard_*` entities for the `users` array when displaying user selection dialogs:
+
+1. **Pool Chores Claim Dialog**: Lets users select who to assign the pool chore to
+2. **Pool Chores Complete Dialog**: Lets users select who completed the chore and who helped
+
+Having users in all sensors ensures the card can always find user data regardless of which sensor is configured in the card view.
+
+#### Implementation
+
+The `format_users_for_attributes()` helper function (`sensor.py:20-51`) handles user data formatting for all sensors. This ensures consistency across all sensor types and simplifies maintenance.
 
 ## Testing Patterns
 
@@ -699,3 +733,4 @@ Examples:
 - `bugfix/1.0.2` - Fixing options flow
 
 Auto-release workflow triggers on merge to main when branch matches semver pattern.
+- When a change is required upstream write the implementation plan to the upstream directory under a folder called "downstream_integration_needs"
