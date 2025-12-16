@@ -10,11 +10,12 @@ CONF_USERNAME = "username"
 CONF_SECRET_KEY = "secret_key"
 CONF_URL = "url"
 CONF_MONITORED_USERS = "monitored_users"
+CONF_SCAN_INTERVAL = "scan_interval"
 
 # Default values
 DEFAULT_NAME = "ChoreBoard"
 DEFAULT_URL = "http://localhost:8000"  # Development default
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_SCAN_INTERVAL = 30  # seconds - background polling interval
 TOKEN_REFRESH_INTERVAL = timedelta(hours=23)  # Refresh before 24h expiry
 
 # Platforms

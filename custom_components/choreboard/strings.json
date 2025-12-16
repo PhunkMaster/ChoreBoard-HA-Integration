@@ -7,12 +7,14 @@
         "data": {
           "username": "ChoreBoard Username",
           "secret_key": "Django SECRET_KEY",
-          "url": "ChoreBoard URL"
+          "url": "ChoreBoard URL",
+          "scan_interval": "Update Interval (seconds)"
         },
         "data_description": {
           "username": "Your ChoreBoard username",
           "secret_key": "The Django SECRET_KEY from your ChoreBoard backend settings",
-          "url": "Base URL of your ChoreBoard instance (e.g., http://localhost:8000)"
+          "url": "Base URL of your ChoreBoard instance (e.g., http://localhost:8000)",
+          "scan_interval": "How often to poll for updates (10-300 seconds). Service calls trigger immediate updates regardless of this setting."
         }
       },
       "select_users": {

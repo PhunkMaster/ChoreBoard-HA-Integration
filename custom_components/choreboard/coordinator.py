@@ -9,6 +9,7 @@ backend URL via the integration config flow.
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import Any
 
 import homeassistant.util.dt as dt_util
@@ -20,6 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api_client import ChoreboardAPIClient, ChoreboardAPIError
 from .const import (
     CONF_MONITORED_USERS,
+    CONF_SCAN_INTERVAL,
     CONF_SECRET_KEY,
     CONF_URL,
     CONF_USERNAME,
@@ -51,12 +53,26 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if isinstance(self.monitored_users, str):
             self.monitored_users = [u.strip() for u in self.monitored_users.split(",")]
 
+        # Get scan interval from options or data (in seconds), convert to timedelta
+        scan_interval_seconds = entry.options.get(
+            CONF_SCAN_INTERVAL,
+            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        )
+
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=timedelta(seconds=scan_interval_seconds),
         )
+
+    async def async_refresh_immediately(self) -> None:
+        """Trigger immediate data refresh after user action.
+
+        This bypasses the normal update interval to provide
+        instant feedback after service calls (claim, complete, undo).
+        """
+        await self.async_request_refresh()
 
     @staticmethod
     def _is_due_today(due_at_str: str | None) -> bool:

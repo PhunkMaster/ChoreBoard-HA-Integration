@@ -19,10 +19,12 @@ from .api_client import (
 )
 from .const import (
     CONF_MONITORED_USERS,
+    CONF_SCAN_INTERVAL,
     CONF_SECRET_KEY,
     CONF_URL,
     CONF_USERNAME,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_URL,
     DOMAIN,
 )
@@ -40,6 +42,7 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._username: str | None = None
         self._secret_key: str | None = None
         self._url: str | None = None
+        self._scan_interval: int = DEFAULT_SCAN_INTERVAL
         self._available_users: list[dict[str, str]] = []
 
     @staticmethod
@@ -60,6 +63,9 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             self._username = user_input[CONF_USERNAME]
             self._secret_key = user_input[CONF_SECRET_KEY]
             self._url = user_input.get(CONF_URL, DEFAULT_URL)
+            self._scan_interval = user_input.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            )
 
             # Validate credentials
             try:
@@ -155,6 +161,12 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_SECRET_KEY): cv.string,
                 vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=10, max=300),
+                ),
             }
         )
 
@@ -196,6 +208,7 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                         CONF_USERNAME: self._username,
                         CONF_SECRET_KEY: self._secret_key,
                         CONF_URL: self._url,
+                        CONF_SCAN_INTERVAL: self._scan_interval,
                         CONF_MONITORED_USERS: monitored_users,
                     },
                 )

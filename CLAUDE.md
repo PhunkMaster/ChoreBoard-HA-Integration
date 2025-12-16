@@ -734,3 +734,4 @@ Examples:
 
 Auto-release workflow triggers on merge to main when branch matches semver pattern.
 - When a change is required upstream write the implementation plan to the upstream directory under a folder called "downstream_integration_needs"
+- Do not work on other projects, only create implementation documentation in those projects.

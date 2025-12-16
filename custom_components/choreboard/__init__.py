@@ -89,7 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await coordinator.api_client.complete_chore(
                 instance_id, helper_ids, completed_by_user_id
             )
-            await coordinator.async_request_refresh()
+            # Immediate refresh after user action for instant feedback
+            await coordinator.async_refresh_immediately()
             _LOGGER.info("Successfully completed chore instance %s", instance_id)
         except ChoreboardAPIError as err:
             _LOGGER.error("Failed to complete chore instance %s: %s", instance_id, err)
@@ -108,7 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await coordinator.api_client.claim_chore(instance_id, assign_to_user_id)
-            await coordinator.async_request_refresh()
+            # Immediate refresh after user action for instant feedback
+            await coordinator.async_refresh_immediately()
             _LOGGER.info("Successfully claimed chore instance %s", instance_id)
         except ChoreboardAPIError as err:
             _LOGGER.error("Failed to claim chore instance %s: %s", instance_id, err)
@@ -122,7 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await coordinator.api_client.undo_completion(completion_id)
-            await coordinator.async_request_refresh()
+            # Immediate refresh after user action for instant feedback
+            await coordinator.async_refresh_immediately()
             _LOGGER.info("Successfully undid completion %s", completion_id)
         except ChoreboardAPIError as err:
             _LOGGER.error("Failed to undo completion %s: %s", completion_id, err)

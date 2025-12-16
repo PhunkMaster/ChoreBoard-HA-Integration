@@ -5,6 +5,37 @@ All notable changes to the ChoreBoard Home Assistant Integration will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-16
+
+### Added
+- **Smart Polling Strategy** - Intelligent data refresh based on user activity
+  - Immediate refresh after service calls (claim, complete, undo) for instant UI feedback
+  - Configurable background polling interval (10-300 seconds, default 30s)
+  - `async_refresh_immediately()` method in coordinator for explicit immediate updates
+- **Configurable Scan Interval** - Users can set custom poll frequency during integration setup
+  - New `scan_interval` configuration option in setup flow
+  - Range validation (10-300 seconds) to ensure reasonable polling behavior
+  - Default: 30 seconds (was fixed at 5 minutes)
+
+### Changed
+- Service handlers now trigger immediate coordinator refresh for responsive UI updates
+  - `choreboard.mark_complete` → immediate refresh
+  - `choreboard.claim_chore` → immediate refresh
+  - `choreboard.undo_completion` → immediate refresh
+- Coordinator update interval is now user-configurable instead of fixed
+- Background polling occurs only when no recent user actions have triggered updates
+
+### Improved
+- User experience: Data updates within 2 seconds of service calls instead of up to 5 minutes
+- Network efficiency: Configurable polling allows users to balance freshness vs. API load
+- Coordinator architecture: Cleaner separation between scheduled and action-triggered updates
+
+### Technical
+- Added `CONF_SCAN_INTERVAL` configuration constant
+- Updated config flow to collect scan_interval preference
+- Enhanced coordinator initialization to use configurable interval
+- All code quality checks passing (ruff, mypy)
+
 ## [1.2.0] - 2025-12-16
 
 ### Added
