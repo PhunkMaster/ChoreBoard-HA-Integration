@@ -8,23 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2025-12-16
 
 ### Added
-- **Users Sensor** (`sensor.users`) - Dedicated sensor exposing all ChoreBoard users with stats
-- **Users array in ALL 12 sensors** - Complete implementation across entire sensor suite for card compatibility
-  - Completion History, Leaderboard (weekly/all-time), Chore Leaderboard (arcade mode)
-  - User Points sensors (weekly and all-time)
-  - Pool Chores, Outstanding, Late, My Chores, My Immediate Chores, Chore Breakdown
-- Users data includes `id`, `username`, `display_name`, `first_name`, points, and assignment eligibility
+- **Users Sensor** (`sensor.choreboard_users`) - Dedicated sensor exposing all ChoreBoard users with stats
+- **Users array in ALL 12 sensors** - Complete implementation across entire sensor suite for ChoreBoard Card compatibility
+  - System-wide sensors: Outstanding, Late, Pool Chores, Chore Breakdown, Completion History
+  - Leaderboard sensors: Weekly, All-Time, Arcade Mode (per-chore)
+  - Per-user sensors: My Chores, My Immediate Chores, Weekly Points, All-Time Points
+- Users data includes `id` (required for service calls), `username`, `display_name`, `first_name`, points, and assignment eligibility
 - `format_users_for_attributes()` helper function for consistent user data formatting across sensors
-- Leaderboard sensors now include `all_users` field with full users list (non-breaking change)
+- Leaderboard sensors include `all_users` field with full users list (non-breaking change)
 
 ### Changed
-- All sensor attributes now include full users list for ChoreBoard Card pool chores feature
-- Enhanced sensor attributes to support user selection dialogs in the ChoreBoard Card
+- All sensor attributes now include full users list for ChoreBoard Card pool chores feature (v1.1.0+)
+- Enhanced sensor attributes to support user selection dialogs (Claim and Complete pool chores)
 - Leaderboard sensors maintain backward compatibility while adding full users data
 
 ### Documentation
-- Added Sensor Attributes section to CLAUDE.md with users array structure
-- Updated README.md with User Selection Dialogs feature
+- Comprehensive Sensor Attributes section in CLAUDE.md documenting users array structure
+- Added ChoreBoard Card Integration section to README.md
+- Documented all 12 sensors with users array support
+- Added dedicated Users Sensor documentation in README.md with complete field descriptions
 
 ## [1.1.0] - 2025-12-15
 

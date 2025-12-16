@@ -22,7 +22,12 @@ A Home Assistant custom integration for ChoreBoard, enabling you to track chores
 - Completion information on all chores (who, when, helpers)
 - Point tracking for gamification
 - Weekly and all-time leaderboards
-- **User Selection Dialogs**: All sensors include users data for card user selection features
+
+### ChoreBoard Card Integration
+- **User Selection Support**: All sensors include users data in their attributes
+- **Pool Chores Feature**: Enables user selection dialogs in ChoreBoard Card v1.1.0+
+- **Dedicated Users Sensor**: `sensor.choreboard_users` for easy user access
+- **Automatic User Discovery**: Card automatically finds users from any ChoreBoard sensor
 
 ## Installation
 
@@ -205,6 +210,28 @@ User's lifetime point total.
 - `display_name`: Display name
 - `points`: All-time points
 - `weekly_points`: Current week points
+
+#### Users Sensor
+
+##### ChoreBoard Users (`sensor.choreboard_users`)
+Dedicated sensor providing all ChoreBoard users for card integration.
+
+**State**: Number of users (integer)
+
+**Attributes**:
+- `users`: Array of all users with complete user data:
+  - `id`: User ID (required for service calls)
+  - `username`: Login username
+  - `display_name`: Display name
+  - `first_name`: First name
+  - `can_be_assigned`: Whether user can receive chore assignments
+  - `eligible_for_points`: Whether user can earn points
+  - `weekly_points`: Current week's points
+  - `all_time_points`: Lifetime points
+  - `claims_today`: Number of pool chores claimed today (optional)
+- `count`: Number of users
+
+**Usage**: This sensor is specifically designed for ChoreBoard Card v1.1.0+ user selection dialogs. All ChoreBoard sensors include this users array in their attributes, so the card can find user data from any configured sensor.
 
 ### Services
 
