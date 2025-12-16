@@ -239,8 +239,8 @@ async def test_all_sensors_have_users_array(hass: HomeAssistant, setup_integrati
             f"Sensor {sensor_id} missing users/all_users array"
         )
 
-        # Get the users array
-        users_array = state.attributes.get("users") or state.attributes.get("all_users")
+        # Get the users array (prefer all_users for leaderboard sensors)
+        users_array = state.attributes.get("all_users") or state.attributes.get("users")
 
         # Verify users array structure
         assert isinstance(users_array, list), (
