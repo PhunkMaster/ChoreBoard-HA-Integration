@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.6] - 2025-12-17
+
+### Changed
+- **Auto-Release Workflow** - Merged release.yml into auto-release.yml for 100% automation
+  - Removed separate `release.yml` workflow (no longer needed)
+  - Added ZIP archive creation step to auto-release workflow
+  - Release creation now uploads choreboard.zip asset automatically
+  - Eliminates manual asset upload step entirely
+  - Single workflow handles entire release process from merge to published release
+
+### Technical
+- Added "Create ZIP archive" step using `zip -r` command
+- Updated `softprops/action-gh-release@v2` to include `files: choreboard.zip` parameter
+- Deleted `.github/workflows/release.yml` (functionality merged into auto-release.yml)
+- Updated workflow documentation to reflect self-contained nature
+
+### Result
+**Fully automated release pipeline with zero manual steps:**
+1. ✅ Branch detection (all merge types)
+2. ✅ Version extraction
+3. ✅ manifest.json update
+4. ✅ Commit and push (deploy key bypass)
+5. ✅ ZIP archive creation
+6. ✅ GitHub release with asset upload
+7. ✅ No manual intervention required
+
 ## [1.4.5] - 2025-12-17
 
 ### Changed

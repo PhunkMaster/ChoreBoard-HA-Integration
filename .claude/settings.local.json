@@ -22,7 +22,12 @@
       "Bash(git -C \"C:\\Users\\pmagalios\\PycharmProjects\\ChoreBoard\" status)",
       "Bash(git -C \"C:\\Users\\pmagalios\\PycharmProjects\\ChoreBoard\" commit -m \"$(cat <<''EOF''\ndocs: Add arcade mode backend verification report\n\nComprehensive verification confirming all 8 REST API endpoints are \nimplemented correctly according to the Home Assistant integration \nspecification.\n\nVerification Results:\n✅ All 8 arcade mode API endpoints implemented\n✅ URL routing properly configured\n✅ HMAC authentication on all endpoints\n✅ Kiosk mode support (user_id/judge_id parameters)\n✅ Complete OpenAPI/Swagger documentation\n✅ Full ArcadeService integration\n✅ Response formats match specification exactly\n\nEndpoints Verified:\n- POST /api/arcade/start/\n- POST /api/arcade/stop/\n- POST /api/arcade/approve/\n- POST /api/arcade/deny/\n- POST /api/arcade/continue/\n- POST /api/arcade/cancel/\n- GET /api/arcade/status/\n- GET /api/arcade/pending/\n\nStatus: APPROVED FOR PRODUCTION USE\n\nThis confirms the backend is ready for Home Assistant ChoreBoard\nIntegration v1.4.0 arcade mode features.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git -C \"C:\\Users\\pmagalios\\PycharmProjects\\ChoreBoard\" push)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(git branch:*)",
+      "Bash(gh workflow run:*)"
     ]
   }
 }
