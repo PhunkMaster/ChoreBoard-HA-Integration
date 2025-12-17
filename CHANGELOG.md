@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2025-12-17
+
+### Testing
+- Test auto-release workflow with github-actions bot bypass enabled
+- Verify manifest.json automatic update works without manual PR
+
+## [1.4.1] - 2025-12-17
+
+### Fixed
+- **Auto-Release Workflow** - Now handles squash merges correctly
+- **Release Workflow** - Fixed asset upload permissions
+
 ## [1.4.0] - 2025-12-16
 
 ### Added
