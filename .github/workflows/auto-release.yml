@@ -8,10 +8,13 @@ name: Auto Release on Semver Branch Merge
 # 2. Extracts version number from branch name
 # 3. Updates manifest.json to the new version
 # 4. Commits and pushes manifest.json update to main (using deploy key to bypass rulesets)
-# 5. Creates a GitHub release with auto-generated notes
+# 5. Creates ZIP archive of the integration
+# 6. Creates a GitHub release with auto-generated notes and uploads the ZIP asset
 #
 # SETUP REQUIRED: See DEPLOY_KEY_SETUP.md for instructions on configuring the
 # SSH deploy key needed to bypass repository rulesets.
+#
+# This workflow is fully self-contained and does not require any other workflows.
 
 on:
   push:
@@ -191,6 +194,15 @@ jobs:
 
           echo "Release notes generated"
 
+      - name: Create ZIP archive
+        if: steps.semver.outputs.is_semver == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        run: |
+          cd custom_components
+          zip -r ../choreboard.zip choreboard/
+          cd ..
+          echo "✅ Created choreboard.zip"
+          ls -lh choreboard.zip
+
       - name: Create GitHub Release
         if: steps.semver.outputs.is_semver == 'true' && steps.tag_check.outputs.tag_exists == 'false'
         uses: softprops/action-gh-release@v2
@@ -198,6 +210,7 @@ jobs:
           tag_name: ${{ steps.semver.outputs.tag }}
           name: Release ${{ steps.semver.outputs.tag }}
           body_path: release_notes.md
+          files: choreboard.zip
           draft: false
           prerelease: ${{ contains(steps.semver.outputs.version, '-') }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -209,4 +222,7 @@ jobs:
             echo "✅ Tag ${{ steps.semver.outputs.tag }} already exists - skipped release creation"
           else
             echo "✅ Created release ${{ steps.semver.outputs.tag }}"
+            echo "✅ Uploaded choreboard.zip asset"
+            echo "✅ Updated manifest.json to version ${{ steps.semver.outputs.version }}"
+            echo "🎉 Fully automated release complete!"
           fi
