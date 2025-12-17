@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.4] - 2025-12-17
+
+### Fixed
+- **Auto-Release Workflow** - Fixed SSH credential persistence for deploy key authentication
+  - Removed `persist-credentials: false` that was causing deploy key removal after checkout
+  - Deploy key now remains available for git push operation
+  - Resolves "Permission denied (publickey)" error when pushing manifest.json updates
+  - v1.4.3 successfully added deploy key support, v1.4.4 fixes credential persistence
+
 ## [1.4.3] - 2025-12-17
 
 ### Fixed
 - **Auto-Release Workflow** - Implemented SSH deploy key authentication to bypass repository rulesets
-  - Workflow can now successfully push manifest.json updates to main branch
+  - Workflow can now successfully push manifest.json updates to main branch (with v1.4.4 fix)
   - Deploy keys can be added to ruleset bypass list (unlike built-in github-actions[bot])
   - Resolves "Repository rule violations found" errors when updating manifest.json
   - See DEPLOY_KEY_SETUP.md for complete configuration instructions
