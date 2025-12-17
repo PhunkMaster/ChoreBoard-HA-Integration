@@ -193,15 +193,14 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.semver.outputs.is_semver == 'true' && steps.tag_check.outputs.tag_exists == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.semver.outputs.tag }}
-          release_name: Release ${{ steps.semver.outputs.tag }}
+          name: Release ${{ steps.semver.outputs.tag }}
           body_path: release_notes.md
           draft: false
           prerelease: ${{ contains(steps.semver.outputs.version, '-') }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         if: steps.semver.outputs.is_semver == 'true'

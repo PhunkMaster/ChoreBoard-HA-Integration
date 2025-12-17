@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5] - 2025-12-17
+
+### Changed
+- **Auto-Release Workflow** - Replaced deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`
+  - Uses actively maintained action for creating GitHub releases
+  - Properly triggers `release.yml` workflow to upload choreboard.zip asset
+  - Eliminates deprecation warnings in workflow logs
+  - Same functionality with better support and reliability
+
+### Technical
+- Updated `.github/workflows/auto-release.yml` to use `softprops/action-gh-release@v2`
+- Changed `release_name` parameter to `name` per new action's API
+- Added explicit `token` parameter for authentication
+
 ## [1.4.4] - 2025-12-17
 
 ### Fixed
