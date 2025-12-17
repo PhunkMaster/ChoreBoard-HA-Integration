@@ -101,6 +101,7 @@ def mock_choreboard_api():
                     "claims_today": 2,
                 }
             ],
+            "points_name": "points",
             "recent_completions": [
                 {
                     "id": 10,

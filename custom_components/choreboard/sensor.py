@@ -159,6 +159,7 @@ class ChoreboardOutstandingSensor(
             "chores": chore_list,
             "count": len(chores),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
     def _format_assignee(self, assigned_to: Any) -> str:
@@ -232,6 +233,7 @@ class ChoreboardLateSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
             "chores": chore_list,
             "count": len(chores),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
     def _format_assignee(self, assigned_to: Any) -> str:
@@ -305,6 +307,7 @@ class ChoreboardPoolSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEntit
             "chores": chore_list,
             "count": len(chores),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -368,6 +371,7 @@ class ChoreboardChoreBreakdownSensor(
             "outstanding_count": len(outstanding),
             "late_count": len(late),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -433,6 +437,7 @@ class ChoreboardCompletionHistorySensor(
             "completions": completion_list,
             "count": len(completions),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -501,6 +506,7 @@ class ChoreboardMyChoresSensor(CoordinatorEntity[ChoreboardCoordinator], SensorE
             "chores": chore_list,
             "count": len(chores),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -586,6 +592,7 @@ class ChoreboardMyImmediateChoresSensor(
             "total_chores": len(chores),
             "complete_later_chores": len(chores) - len(immediate_chores),
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -644,6 +651,7 @@ class ChoreboardLeaderboardSensor(
             "users": user_list,
             "count": len(leaderboard),
             "all_users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -705,6 +713,7 @@ class ChoreboardChoreLeaderboardSensor(
                     "scores": score_list,
                     "count": len(high_scores),
                     "users": format_users_for_attributes(self.coordinator.data),
+                    "points_name": self.coordinator.data.get("points_name", "points"),
                 }
 
         return {
@@ -713,6 +722,7 @@ class ChoreboardChoreLeaderboardSensor(
             "scores": [],
             "count": 0,
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -753,11 +763,13 @@ class ChoreboardUserWeeklyPointsSensor(
                     "points": float(user.get("weekly_points", 0)),
                     "claims_today": user.get("claims_today", 0),
                     "users": format_users_for_attributes(self.coordinator.data),
+                    "points_name": self.coordinator.data.get("points_name", "points"),
                 }
         return {
             "username": self._username,
             "points": 0.0,
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -798,11 +810,13 @@ class ChoreboardUserAllTimePointsSensor(
                     "points": float(user.get("all_time_points", 0)),
                     "weekly_points": float(user.get("weekly_points", 0)),
                     "users": format_users_for_attributes(self.coordinator.data),
+                    "points_name": self.coordinator.data.get("points_name", "points"),
                 }
         return {
             "username": self._username,
             "points": 0.0,
             "users": format_users_for_attributes(self.coordinator.data),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }
 
 
@@ -832,4 +846,5 @@ class ChoreboardUsersSensor(CoordinatorEntity[ChoreboardCoordinator], SensorEnti
         return {
             "users": user_list,
             "count": len(user_list),
+            "points_name": self.coordinator.data.get("points_name", "points"),
         }

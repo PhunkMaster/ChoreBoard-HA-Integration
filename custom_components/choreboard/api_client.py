@@ -207,6 +207,15 @@ class ChoreboardAPIClient:
         data = await self._request("GET", "/api/users/")
         return data if isinstance(data, list) else []
 
+    async def get_settings(self) -> dict[str, Any]:
+        """Get system settings including points_name.
+
+        Returns:
+            Dictionary with settings data including points_name
+        """
+        data = await self._request("GET", "/api/settings/")
+        return data if isinstance(data, dict) else {}
+
     async def get_recent_completions(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get recent chore completions.
 
