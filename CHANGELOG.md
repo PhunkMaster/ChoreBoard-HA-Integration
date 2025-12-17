@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2025-12-17
+
+### Fixed
+- **Auto-Release Workflow** - Implemented SSH deploy key authentication to bypass repository rulesets
+  - Workflow can now successfully push manifest.json updates to main branch
+  - Deploy keys can be added to ruleset bypass list (unlike built-in github-actions[bot])
+  - Resolves "Repository rule violations found" errors when updating manifest.json
+  - See DEPLOY_KEY_SETUP.md for complete configuration instructions
+
+### Added
+- **DEPLOY_KEY_SETUP.md** - Comprehensive guide for configuring SSH deploy keys
+  - Step-by-step setup instructions with security best practices
+  - Troubleshooting guide for common issues
+  - Workflow diagram and testing procedures
+  - Key rotation recommendations
+
+### Changed
+- Updated auto-release workflow to use `ssh-key` parameter in checkout action
+- Added workflow documentation comments explaining deploy key usage
+
+### Note
+This release completes the fully automated release pipeline:
+- ✅ Squash merge detection (v1.4.1)
+- ✅ Asset upload automation (v1.4.1)
+- ✅ manifest.json automatic updates (v1.4.3)
+- ✅ Full automation with no manual steps required
+
 ## [1.4.2] - 2025-12-17
 
 ### Testing
