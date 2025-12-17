@@ -1,5 +1,18 @@
 name: Auto Release on Semver Branch Merge
 
+# This workflow automatically creates a GitHub release when a semantic versioning
+# branch (feature/X.Y.Z, bugfix/X.Y.Z, hotfix/X.Y.Z) is merged to main.
+#
+# It performs these steps:
+# 1. Detects the merged branch name (supports squash merge, regular merge, direct merge)
+# 2. Extracts version number from branch name
+# 3. Updates manifest.json to the new version
+# 4. Commits and pushes manifest.json update to main (using deploy key to bypass rulesets)
+# 5. Creates a GitHub release with auto-generated notes
+#
+# SETUP REQUIRED: See DEPLOY_KEY_SETUP.md for instructions on configuring the
+# SSH deploy key needed to bypass repository rulesets.
+
 on:
   push:
     branches:
@@ -12,10 +25,16 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Use deploy key to authenticate with SSH, allowing push to main branch
+      # while respecting repository rulesets. Deploy keys can be added to the
+      # ruleset bypass list, unlike the built-in github-actions[bot].
+      # See DEPLOY_KEY_SETUP.md for configuration instructions.
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          persist-credentials: false
 
       - name: Get merged branch name
         id: branch
