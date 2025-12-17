@@ -420,6 +420,89 @@ ruff check .
 mypy custom_components/choreboard/
 ```
 
+### Automated Release Process
+
+This repository uses a **fully automated release pipeline** that requires zero manual steps. Releases are triggered automatically when semantic versioning branches are merged to `main`.
+
+#### Creating a Release
+
+1. **Create a semantic version branch**:
+   ```bash
+   git checkout -b feature/1.5.0  # For new features
+   # or
+   git checkout -b bugfix/1.4.7   # For bug fixes
+   # or
+   git checkout -b hotfix/1.4.8   # For critical fixes
+   ```
+
+2. **Make your changes and commit**:
+   ```bash
+   git add .
+   git commit -m "feat: Add new feature"
+   git push -u origin feature/1.5.0
+   ```
+
+3. **Create and merge a pull request**:
+   ```bash
+   gh pr create --title "feat: Add new feature"
+   # Review, approve, and merge via GitHub UI
+   ```
+
+4. **Automation handles the rest**:
+   - ✅ Updates `manifest.json` to version 1.5.0
+   - ✅ Commits and pushes to main (bypass rulesets with deploy key)
+   - ✅ Creates `choreboard.zip` archive
+   - ✅ Publishes GitHub release with notes
+   - ✅ Uploads ZIP asset automatically
+
+#### Supported Branch Patterns
+
+The auto-release workflow recognizes these patterns:
+- `feature/X.Y.Z` - New features (minor version bump)
+- `bugfix/X.Y.Z` - Bug fixes (patch version bump)
+- `hotfix/X.Y.Z` - Critical fixes (patch version bump)
+- `release/X.Y.Z` - Release preparation
+- `X.Y.Z` or `vX.Y.Z` - Direct version branches
+
+**Examples**:
+- `feature/1.5.0` → Release v1.5.0
+- `bugfix/1.4.7` → Release v1.4.7
+- `hotfix/2.0.1` → Release v2.0.1
+
+#### Requirements
+
+The automated release workflow requires:
+- **SSH Deploy Key**: Configured to bypass repository rulesets
+- **Semantic Versioning**: Branch names must follow semver pattern
+- **Code Owner Approval**: Pull requests require approval before merge
+
+See [DEPLOY_KEY_SETUP.md](DEPLOY_KEY_SETUP.md) for deploy key configuration instructions.
+
+#### What Gets Automated
+
+The workflow is **100% automated** and handles:
+
+| Step | Description | Status |
+|------|-------------|--------|
+| Branch Detection | Supports squash, regular, and direct merges | ✅ |
+| Version Extraction | Parses semver from branch name | ✅ |
+| Manifest Update | Updates `custom_components/choreboard/manifest.json` | ✅ |
+| Commit & Push | Uses SSH deploy key to bypass rulesets | ✅ |
+| ZIP Creation | Bundles integration into `choreboard.zip` | ✅ |
+| Release Creation | Publishes GitHub release with auto-generated notes | ✅ |
+| Asset Upload | Attaches ZIP to release automatically | ✅ |
+
+**Workflow Duration**: ~20-25 seconds per release
+
+#### Workflow Details
+
+The auto-release workflow (`.github/workflows/auto-release.yml`) is a single self-contained workflow that:
+- Triggers on push to `main` branch
+- Detects merged branch name from commit message
+- Validates semantic versioning pattern
+- Updates manifest, creates release, and uploads assets
+- No separate workflows or manual steps required
+
 ## Support
 
 For issues and feature requests, please use the [GitHub issue tracker](https://github.com/PhunkMaster/ChoreBoard-HA-Integration/issues).
