@@ -208,12 +208,12 @@ class ChoreboardAPIClient:
         return data if isinstance(data, list) else []
 
     async def get_settings(self) -> dict[str, Any]:
-        """Get system settings including points_name.
+        """Get site-wide configuration settings.
 
         Returns:
-            Dictionary with settings data including points_name
+            Dictionary with settings data including points_label and points_label_short
         """
-        data = await self._request("GET", "/api/settings/")
+        data = await self._request("GET", "/api/site-settings/")
         return data if isinstance(data, dict) else {}
 
     async def get_recent_completions(self, limit: int = 10) -> list[dict[str, Any]]:

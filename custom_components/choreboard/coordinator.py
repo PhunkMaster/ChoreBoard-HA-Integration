@@ -172,7 +172,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "late_chores": [...],          # List of all overdue chores
             "pool_chores": [...],          # List of unassigned pool chores
             "users": [...],                # List of all users with points data
-            "points_name": "points",       # Custom points name from settings
+            "points_label": "points",      # Custom points label from site settings
             "recent_completions": [...],   # Recent completion history
             "chore_leaderboards": [...],   # Arcade mode leaderboards for chores
             "leaderboard_weekly": [...],   # Weekly leaderboard data
@@ -252,7 +252,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "late_chores": late_chores,
                 "pool_chores": pool_chores,
                 "users": users,
-                "points_name": settings.get("points_name", "points"),
+                "points_label": settings.get("points_label", "points"),
                 "recent_completions": recent_completions,
                 "chore_leaderboards": chore_leaderboards,
                 "leaderboard_weekly": leaderboard_weekly,
