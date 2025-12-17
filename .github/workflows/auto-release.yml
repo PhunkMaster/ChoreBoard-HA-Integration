@@ -19,6 +19,8 @@ jobs:
 
       - name: Get merged branch name
         id: branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the commit message which contains the merged branch name
           COMMIT_MSG=$(git log -1 --pretty=%B)
@@ -29,12 +31,22 @@ jobs:
           BRANCH_NAME=""
 
           if [[ "$COMMIT_MSG" =~ Merge\ pull\ request\ #[0-9]+\ from\ [^/]+/([^ ]+) ]]; then
+            # Regular merge commit
             BRANCH_NAME="${BASH_REMATCH[1]}"
+            echo "Extracted from merge commit: $BRANCH_NAME"
           elif [[ "$COMMIT_MSG" =~ Merge\ branch\ \'([^\']+)\' ]]; then
+            # Direct branch merge
             BRANCH_NAME="${BASH_REMATCH[1]}"
+            echo "Extracted from branch merge: $BRANCH_NAME"
+          elif [[ "$COMMIT_MSG" =~ \(#([0-9]+)\) ]]; then
+            # Squash merge - extract PR number and get branch name from PR
+            PR_NUMBER="${BASH_REMATCH[1]}"
+            echo "Squash merge detected, PR #$PR_NUMBER"
+            BRANCH_NAME=$(gh pr view "$PR_NUMBER" --json headRefName --jq .headRefName)
+            echo "Extracted from PR API: $BRANCH_NAME"
           fi
 
-          echo "Extracted branch name: $BRANCH_NAME"
+          echo "Final branch name: $BRANCH_NAME"
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Check if branch is semver and create release
