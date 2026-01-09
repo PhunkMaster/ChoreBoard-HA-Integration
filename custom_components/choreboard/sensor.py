@@ -501,13 +501,23 @@ class ChoreboardMyChoresSensor(CoordinatorEntity[ChoreboardCoordinator], SensorE
 
             chore_list.append(chore_info)
 
-        return {
+        # Get arcade session for this user if any
+        arcade_sessions = self.coordinator.data.get("arcade_sessions", {})
+        arcade_session = arcade_sessions.get(self._username)
+
+        attributes = {
             "username": self._username,
             "chores": chore_list,
             "count": len(chores),
             "users": format_users_for_attributes(self.coordinator.data),
             "points_label": self.coordinator.data.get("points_label", "points"),
         }
+
+        # Add arcade session if active
+        if arcade_session:
+            attributes["arcade_session"] = arcade_session
+
+        return attributes
 
 
 class ChoreboardMyImmediateChoresSensor(
