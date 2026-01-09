@@ -209,7 +209,7 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): vol.All(
                     vol.Coerce(int),
-                    vol.Range(min=10, max=300),
+                    vol.Range(min=1, max=300),
                 ),
             }
         )
@@ -337,7 +337,7 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
                         vol.Coerce(int),
-                        vol.Range(min=10, max=300),
+                        vol.Range(min=1, max=300),
                     ),
                 }
             ),
@@ -556,15 +556,15 @@ class ChoreboardOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_USERNAME,
                         default=self.config_entry.data.get(CONF_USERNAME, ""),
-                    ): str,
+                    ): cv.string,
                     vol.Required(
                         CONF_SECRET_KEY,
                         default=self.config_entry.data.get(CONF_SECRET_KEY, ""),
-                    ): str,
+                    ): cv.string,
                     vol.Required(
                         CONF_URL,
                         default=self.config_entry.data.get(CONF_URL, DEFAULT_URL),
-                    ): str,
+                    ): cv.string,
                 }
             ),
             errors=errors,
