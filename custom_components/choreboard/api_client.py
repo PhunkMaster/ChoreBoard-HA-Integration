@@ -248,10 +248,21 @@ class ChoreboardAPIClient:
         """Get arcade mode leaderboards for all chores.
 
         Returns:
-            List of chore leaderboard dictionaries with high scores
+            List of chore leaderboard dictionaries with high scores.
+            Each dict contains: chore_id, chore_name, high_scores
         """
         data = await self._request("GET", "/api/chore-leaderboards/")
-        return data if isinstance(data, list) else []
+
+        # Validate response format
+        if not isinstance(data, list):
+            _LOGGER.warning(
+                "Expected list from /api/chore-leaderboards/, got %s. "
+                "Backend may be outdated.",
+                type(data).__name__,
+            )
+            return []
+
+        return data
 
     async def claim_chore(
         self, instance_id: int, assign_to_user_id: int | None = None
@@ -270,6 +281,19 @@ class ChoreboardAPIClient:
             json_data["assign_to_user_id"] = assign_to_user_id
 
         data = await self._request("POST", "/api/claim/", json_data=json_data)
+        return data if isinstance(data, dict) else {}
+
+    async def unclaim_chore(self, instance_id: int) -> dict[str, Any]:
+        """Unclaim a chore and return it to the pool.
+
+        Args:
+            instance_id: ID of the chore instance to unclaim
+
+        Returns:
+            Response with message and updated chore data
+        """
+        json_data: dict[str, Any] = {"instance_id": instance_id}
+        data = await self._request("POST", "/api/unclaim/", json_data=json_data)
         return data if isinstance(data, dict) else {}
 
     async def complete_chore(
@@ -442,6 +466,39 @@ class ChoreboardAPIClient:
         if isinstance(data, dict) and "pending_sessions" in data:
             return data["pending_sessions"]
         return []
+
+    async def create_quick_task(
+        self,
+        name: str,
+        description: str = "",
+        points: float = 1.0,
+        assign_to_user_id: int | None = None,
+        due_at: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a one-time quick task.
+
+        Args:
+            name: Task name
+            description: Optional task description
+            points: Point value (default: 1.0)
+            assign_to_user_id: Optional user ID to assign to
+            due_at: Optional ISO datetime string for due date
+
+        Returns:
+            Response with created task data
+        """
+        json_data: dict[str, Any] = {
+            "name": name,
+            "description": description,
+            "points": points,
+        }
+        if assign_to_user_id is not None:
+            json_data["assign_to_user_id"] = assign_to_user_id
+        if due_at is not None:
+            json_data["due_at"] = due_at
+
+        data = await self._request("POST", "/api/quick-add-task/", json_data=json_data)
+        return data if isinstance(data, dict) else {}
 
     async def test_connection(self) -> bool:
         """Test the API connection and authentication.
