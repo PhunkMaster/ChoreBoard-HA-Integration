@@ -180,6 +180,10 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "my_chores": {                 # Per-user chore data
                 "username1": [...],
                 "username2": [...],
+            },
+            "arcade_sessions": {           # Active arcade sessions per user
+                "username1": {...},        # Session object if active, omitted if none
+                "username2": {...},
             }
         }
         """
@@ -247,6 +251,23 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
                     my_chores_data[username] = user_chores
 
+            # Fetch arcade session status for each monitored user
+            arcade_sessions = {}
+            if self.monitored_users:
+                for username in self.monitored_users:
+                    # Find user ID by username
+                    user = next((u for u in users if u.get("username") == username), None)
+                    if user:
+                        user_id = user.get("id")
+                        if user_id:
+                            try:
+                                arcade_status = await self.api_client.get_arcade_status(user_id)
+                                if arcade_status.get("has_active_session"):
+                                    arcade_sessions[username] = arcade_status.get("session")
+                            except ChoreboardAPIError as err:
+                                _LOGGER.debug("Failed to fetch arcade status for %s: %s", username, err)
+                                # Don't fail the entire update if arcade status fails
+
             data = {
                 "outstanding_chores": outstanding_chores,
                 "late_chores": late_chores,
@@ -258,6 +279,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "leaderboard_weekly": leaderboard_weekly,
                 "leaderboard_alltime": leaderboard_alltime,
                 "my_chores": my_chores_data,
+                "arcade_sessions": arcade_sessions,
             }
 
             _LOGGER.debug(
