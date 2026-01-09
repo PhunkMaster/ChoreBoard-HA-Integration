@@ -53,6 +53,12 @@ SERVICE_CLAIM_CHORE_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_UNCLAIM_CHORE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CHORE_ID): cv.positive_int,
+    }
+)
+
 SERVICE_UNDO_COMPLETION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CHORE_ID): cv.positive_int,
@@ -158,6 +164,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
         except ChoreboardAPIError as err:
             _LOGGER.error("Failed to claim chore instance %s: %s", instance_id, err)
             raise HomeAssistantError(f"Failed to claim chore: {err}") from err
+
+    async def handle_unclaim_chore(call: ServiceCall) -> None:
+        """Handle the unclaim_chore service call."""
+        instance_id = call.data[ATTR_CHORE_ID]
+
+        _LOGGER.debug("Unclaim chore service called for instance %s", instance_id)
+
+        try:
+            await coordinator.api_client.unclaim_chore(instance_id)
+            await coordinator.async_refresh_immediately()
+            _LOGGER.info("Successfully unclaimed chore instance %s", instance_id)
+        except ChoreboardAPIError as err:
+            _LOGGER.error("Failed to unclaim chore instance %s: %s", instance_id, err)
+            raise HomeAssistantError(f"Failed to unclaim chore: {err}") from err
 
     async def handle_undo_completion(call: ServiceCall) -> None:
         """Handle the undo_completion service call."""
@@ -296,6 +316,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
         SERVICE_CLAIM_CHORE,
         handle_claim_chore,
         schema=SERVICE_CLAIM_CHORE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNCLAIM_CHORE,
+        handle_unclaim_chore,
+        schema=SERVICE_UNCLAIM_CHORE_SCHEMA,
     )
 
     hass.services.async_register(

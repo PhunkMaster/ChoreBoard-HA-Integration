@@ -51,6 +51,20 @@ claim_chore:
           min: 1
           mode: box
 
+unclaim_chore:
+  name: Unclaim chore
+  description: Return a claimed chore to the pool for someone else to claim
+  fields:
+    chore_id:
+      name: Chore Instance ID
+      description: The ID of the chore instance to unclaim
+      required: true
+      example: 42
+      selector:
+        number:
+          min: 1
+          mode: box
+
 undo_completion:
   name: Undo completion
   description: Undo a chore completion (admin only)

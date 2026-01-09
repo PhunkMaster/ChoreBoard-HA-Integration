@@ -24,6 +24,7 @@ PLATFORMS = ["sensor"]
 # Service names
 SERVICE_MARK_COMPLETE = "mark_complete"
 SERVICE_CLAIM_CHORE = "claim_chore"
+SERVICE_UNCLAIM_CHORE = "unclaim_chore"
 SERVICE_UNDO_COMPLETION = "undo_completion"
 SERVICE_START_ARCADE = "start_arcade"
 SERVICE_STOP_ARCADE = "stop_arcade"
