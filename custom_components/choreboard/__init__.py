@@ -31,6 +31,7 @@ from .const import (
     SERVICE_MARK_COMPLETE,
     SERVICE_START_ARCADE,
     SERVICE_STOP_ARCADE,
+    SERVICE_UNCLAIM_CHORE,
     SERVICE_UNDO_COMPLETION,
 )
 from .coordinator import ChoreboardCoordinator

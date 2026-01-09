@@ -70,6 +70,10 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             # Validate credentials
             try:
                 session = async_get_clientsession(self.hass)
+                # Type assertions - these were just set from user_input above
+                assert self._url is not None
+                assert self._username is not None
+                assert self._secret_key is not None
                 api_client = ChoreboardAPIClient(
                     self._url,
                     self._username,
