@@ -263,7 +263,17 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             try:
                                 arcade_status = await self.api_client.get_arcade_status(user_id)
                                 if arcade_status.get("has_active_session"):
-                                    arcade_sessions[username] = arcade_status.get("session")
+                                    # Backend returns session data at top level, not nested
+                                    arcade_sessions[username] = {
+                                        "id": arcade_status.get("session_id"),
+                                        "chore_id": arcade_status.get("instance_id"),
+                                        "chore_name": arcade_status.get("chore_name"),
+                                        "user_id": user_id,
+                                        "user_name": username,
+                                        "start_time": arcade_status.get("started_at"),
+                                        "elapsed_seconds": arcade_status.get("elapsed_seconds", 0),
+                                        "status": arcade_status.get("status", "active"),
+                                    }
                             except ChoreboardAPIError as err:
                                 _LOGGER.debug("Failed to fetch arcade status for %s: %s", username, err)
                                 # Don't fail the entire update if arcade status fails
