@@ -476,8 +476,6 @@ The automated release workflow requires:
 - **Semantic Versioning**: Branch names must follow semver pattern
 - **Code Owner Approval**: Pull requests require approval before merge
 
-See [DEPLOY_KEY_SETUP.md](DEPLOY_KEY_SETUP.md) for deploy key configuration instructions.
-
 #### What Gets Automated
 
 The workflow is **100% automated** and handles:

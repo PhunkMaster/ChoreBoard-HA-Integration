@@ -37,12 +37,13 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.api_client = ChoreboardAPIClient(
+        self.choreboard_api_client = ChoreboardAPIClient(
             base_url=entry.data[CONF_URL],
             username=entry.data[CONF_USERNAME],
             secret_key=entry.data[CONF_SECRET_KEY],
             session=async_get_clientsession(hass),
         )
+        self.api_client = self.choreboard_api_client
 
         # Get monitored users from options (if set) or fall back to data
         self.monitored_users: list[str] = entry.options.get(
@@ -208,7 +209,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             pool_chores = [
                 chore
                 for chore in outstanding_chores
-                if chore.get("status") == "POOL"
+                if str(chore.get("status")).upper() == "POOL"
                 or (
                     chore.get("chore", {}).get("is_pool", False)
                     and not chore.get("assigned_to")
@@ -256,16 +257,36 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.monitored_users:
                 for username in self.monitored_users:
                     # Find user ID by username
-                    user = next((u for u in users if u.get("username") == username), None)
+                    user = next(
+                        (u for u in users if u.get("username") == username), None
+                    )
                     if user:
                         user_id = user.get("id")
                         if user_id:
                             try:
-                                arcade_status = await self.api_client.get_arcade_status(user_id)
+                                arcade_status = await self.api_client.get_arcade_status(
+                                    user_id
+                                )
                                 if arcade_status.get("has_active_session"):
-                                    arcade_sessions[username] = arcade_status.get("session")
+                                    # Backend returns session data at top level, not nested
+                                    arcade_sessions[username] = {
+                                        "id": arcade_status.get("session_id"),
+                                        "chore_id": arcade_status.get("instance_id"),
+                                        "chore_name": arcade_status.get("chore_name"),
+                                        "user_id": user_id,
+                                        "user_name": username,
+                                        "start_time": arcade_status.get("started_at"),
+                                        "elapsed_seconds": arcade_status.get(
+                                            "elapsed_seconds", 0
+                                        ),
+                                        "status": arcade_status.get("status", "active"),
+                                    }
                             except ChoreboardAPIError as err:
-                                _LOGGER.debug("Failed to fetch arcade status for %s: %s", username, err)
+                                _LOGGER.debug(
+                                    "Failed to fetch arcade status for %s: %s",
+                                    username,
+                                    err,
+                                )
                                 # Don't fail the entire update if arcade status fails
 
             data = {
