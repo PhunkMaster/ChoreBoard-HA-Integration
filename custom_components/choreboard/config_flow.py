@@ -86,9 +86,7 @@ class ChoreboardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 if not is_valid:
                     errors["base"] = "invalid_auth"
                 else:
-                    # Fetch available users from API
                     try:
-                        # Primary method: Use dedicated users endpoint
                         try:
                             users_data = await api_client.get_users()
                             if users_data:

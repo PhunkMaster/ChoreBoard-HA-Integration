@@ -208,7 +208,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             pool_chores = [
                 chore
                 for chore in outstanding_chores
-                if chore.get("status") == "POOL"
+                if str(chore.get("status")).upper() == "POOL"
                 or (
                     chore.get("chore", {}).get("is_pool", False)
                     and not chore.get("assigned_to")
