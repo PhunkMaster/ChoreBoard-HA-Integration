@@ -11,7 +11,6 @@ name: Auto Release on Semver Branch Merge
 # 5. Creates ZIP archive of the integration
 # 6. Creates a GitHub release with auto-generated notes and uploads the ZIP asset
 #
-# SETUP REQUIRED: See DEPLOY_KEY_SETUP.md for instructions on configuring the
 # SSH deploy key needed to bypass repository rulesets.
 #
 # This workflow is fully self-contained and does not require any other workflows.
@@ -31,7 +30,6 @@ jobs:
       # Use deploy key to authenticate with SSH, allowing push to main branch
       # while respecting repository rulesets. Deploy keys can be added to the
       # ruleset bypass list, unlike the built-in github-actions[bot].
-      # See DEPLOY_KEY_SETUP.md for configuration instructions.
       # Note: persist-credentials defaults to true, keeping the SSH key available for git push.
       - name: Checkout code
         uses: actions/checkout@v6
