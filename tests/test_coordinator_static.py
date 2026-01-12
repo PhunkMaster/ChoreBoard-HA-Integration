@@ -15,7 +15,16 @@ def test_is_due_today_with_today_date():
     today = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     due_at_str = today.isoformat()
 
-    assert ChoreboardCoordinator._is_due_today(due_at_str) is True
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert ChoreboardCoordinator._is_due_today(chore) is True
 
 
 def test_is_due_today_with_tomorrow_date():
@@ -24,7 +33,16 @@ def test_is_due_today_with_tomorrow_date():
     tomorrow = dt_util.now() + timedelta(days=1)
     due_at_str = tomorrow.isoformat()
 
-    assert ChoreboardCoordinator._is_due_today(due_at_str) is False
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert ChoreboardCoordinator._is_due_today(chore) is False
 
 
 def test_is_due_today_with_past_date():
@@ -33,12 +51,30 @@ def test_is_due_today_with_past_date():
     yesterday = dt_util.now() - timedelta(days=1)
     due_at_str = yesterday.isoformat()
 
-    assert ChoreboardCoordinator._is_due_today(due_at_str) is True
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert ChoreboardCoordinator._is_due_today(chore) is True
 
 
 def test_is_due_today_with_none():
     """Test _is_due_today returns False for None."""
-    assert ChoreboardCoordinator._is_due_today(None) is False
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": None,
+    }
+
+    assert ChoreboardCoordinator._is_due_today(chore) is False
 
 
 def test_normalize_datetime_removes_seconds():

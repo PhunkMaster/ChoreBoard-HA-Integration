@@ -35,6 +35,7 @@ def mock_choreboard_api():
                         "points": 10,
                         "complete_later": False,
                         "is_pool": False,
+                        "schedule_type": "daily",
                     },
                     "status": "ASSIGNED",
                     "assigned_to": {
@@ -64,6 +65,7 @@ def mock_choreboard_api():
                         "points": 15,
                         "complete_later": False,
                         "is_pool": True,
+                        "schedule_type": "daily",
                     },
                     "status": "POOL",
                     "assigned_to": None,
@@ -80,6 +82,7 @@ def mock_choreboard_api():
                         "description": "Overdue chore",
                         "points": 5,
                         "complete_later": False,
+                        "schedule_type": "daily",
                     },
                     "status": "ASSIGNED",
                     "assigned_to": {
@@ -110,6 +113,7 @@ def mock_choreboard_api():
                         "chore": {
                             "name": "Test Chore 1",
                             "points": 10,
+                            "schedule_type": "daily",
                         },
                         "points_value": 10,
                     },
@@ -171,6 +175,7 @@ def mock_choreboard_api():
                             "description": "Test chore description",
                             "points": 10,
                             "complete_later": False,
+                            "schedule_type": "daily",
                         },
                         "status": "ASSIGNED",
                         "assigned_to": {
