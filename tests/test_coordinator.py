@@ -37,7 +37,16 @@ async def test_is_due_today_with_today_date(hass):
     today = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
     due_at_str = today.isoformat()
 
-    assert coordinator._is_due_today(due_at_str) is True
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is True
 
 
 @pytest.mark.asyncio
@@ -58,7 +67,16 @@ async def test_is_due_today_with_tomorrow_date(hass):
     tomorrow = dt_util.now() + timedelta(days=1)
     due_at_str = tomorrow.isoformat()
 
-    assert coordinator._is_due_today(due_at_str) is False
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is False
 
 
 @pytest.mark.asyncio
@@ -79,7 +97,16 @@ async def test_is_due_today_with_past_date(hass):
     yesterday = dt_util.now() - timedelta(days=1)
     due_at_str = yesterday.isoformat()
 
-    assert coordinator._is_due_today(due_at_str) is True
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is True
 
 
 @pytest.mark.asyncio
@@ -96,7 +123,16 @@ async def test_is_due_today_with_none(hass):
     )
     coordinator = ChoreboardCoordinator(hass, entry)
 
-    assert coordinator._is_due_today(None) is False
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "Test Chore",
+            "schedule_type": "daily",
+        },
+        "due_at": None,
+    }
+
+    assert coordinator._is_due_today(chore) is False
 
 
 @pytest.mark.asyncio
@@ -319,3 +355,196 @@ async def test_coordinator_extracts_pool_chores(hass, mock_choreboard_api):
         assert len(pool_chores) == 2
         assert pool_chores[0]["id"] == 1
         assert pool_chores[1]["id"] == 3
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
+async def test_is_due_today_with_one_time_no_due_date(hass):
+    """Test _is_due_today returns True for one-time tasks with year 9999 (no due date)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
+        },
+    )
+    coordinator = ChoreboardCoordinator(hass, entry)
+
+    # One-time task without due date has year 9999
+    from datetime import datetime
+    year_9999_date = datetime(9999, 12, 31, 0, 0, 0)
+    due_at_str = year_9999_date.isoformat()
+
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "One-time task",
+            "schedule_type": "one_time",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
+async def test_is_due_today_with_one_time_due_today(hass):
+    """Test _is_due_today returns True for one-time tasks due today."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
+        },
+    )
+    coordinator = ChoreboardCoordinator(hass, entry)
+
+    # Create a datetime for today
+    today = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    due_at_str = today.isoformat()
+
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "One-time task",
+            "schedule_type": "one_time",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
+async def test_is_due_today_with_one_time_due_tomorrow(hass):
+    """Test _is_due_today returns False for one-time tasks due tomorrow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
+        },
+    )
+    coordinator = ChoreboardCoordinator(hass, entry)
+
+    # Create a datetime for tomorrow
+    tomorrow = dt_util.now() + timedelta(days=1)
+    due_at_str = tomorrow.isoformat()
+
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "One-time task",
+            "schedule_type": "one_time",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
+async def test_is_due_today_with_one_time_overdue(hass):
+    """Test _is_due_today returns True for overdue one-time tasks."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
+        },
+    )
+    coordinator = ChoreboardCoordinator(hass, entry)
+
+    # Create a datetime for yesterday
+    yesterday = dt_util.now() - timedelta(days=1)
+    due_at_str = yesterday.isoformat()
+
+    chore = {
+        "id": 1,
+        "chore": {
+            "name": "One-time task",
+            "schedule_type": "one_time",
+        },
+        "due_at": due_at_str,
+    }
+
+    assert coordinator._is_due_today(chore) is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
+async def test_filter_chores_by_due_date_with_one_time_tasks(hass):
+    """Test _filter_chores_by_due_date with mixed one-time and recurring tasks."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "testuser",
+            CONF_SECRET_KEY: "test_secret_key",
+            CONF_URL: "http://localhost:8000",
+            CONF_MONITORED_USERS: ["testuser"],
+        },
+    )
+    coordinator = ChoreboardCoordinator(hass, entry)
+
+    today = dt_util.now().replace(hour=10, minute=0, second=0, microsecond=0)
+    tomorrow = today + timedelta(days=1)
+    yesterday = today - timedelta(days=1)
+    from datetime import datetime
+    year_9999_date = datetime(9999, 12, 31, 0, 0, 0)
+
+    chores = [
+        {
+            "id": 1,
+            "chore": {"name": "One-time no due date", "schedule_type": "one_time"},
+            "due_at": year_9999_date.isoformat(),
+        },
+        {
+            "id": 2,
+            "chore": {"name": "One-time due today", "schedule_type": "one_time"},
+            "due_at": today.isoformat(),
+        },
+        {
+            "id": 3,
+            "chore": {"name": "One-time due tomorrow", "schedule_type": "one_time"},
+            "due_at": tomorrow.isoformat(),
+        },
+        {
+            "id": 4,
+            "chore": {"name": "One-time overdue", "schedule_type": "one_time"},
+            "due_at": yesterday.isoformat(),
+        },
+        {
+            "id": 5,
+            "chore": {"name": "Daily due today", "schedule_type": "daily"},
+            "due_at": today.isoformat(),
+        },
+        {
+            "id": 6,
+            "chore": {"name": "Daily due tomorrow", "schedule_type": "daily"},
+            "due_at": tomorrow.isoformat(),
+        },
+    ]
+
+    filtered = coordinator._filter_chores_by_due_date(chores)
+
+    # Should include: one-time no due date, one-time due today, one-time overdue, daily due today
+    # Should exclude: one-time due tomorrow, daily due tomorrow
+    assert len(filtered) == 4
+    filtered_ids = [chore["id"] for chore in filtered]
+    assert 1 in filtered_ids  # One-time no due date (year 9999)
+    assert 2 in filtered_ids  # One-time due today
+    assert 4 in filtered_ids  # One-time overdue
+    assert 5 in filtered_ids  # Daily due today
+    assert 3 not in filtered_ids  # One-time due tomorrow should be filtered
+    assert 6 not in filtered_ids  # Daily due tomorrow should be filtered

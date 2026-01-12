@@ -76,15 +76,21 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_request_refresh()
 
     @staticmethod
-    def _is_due_today(due_at_str: str | None) -> bool:
-        """Check if a chore is due by today at 23:59:59.
+    def _is_due_today(chore: dict[str, Any]) -> bool:
+        """Check if a chore should be displayed (due by today or one-time without due date).
 
         Args:
-            due_at_str: ISO 8601 datetime string (e.g., "2025-12-15T10:00:00Z")
+            chore: Full chore dictionary containing due_at and nested chore metadata
 
         Returns:
-            True if the chore is due by end of today, False otherwise
+            True if chore should be shown, False otherwise
+
+        Logic:
+            - ONE_TIME tasks without due date (year 9999): Always show
+            - ONE_TIME tasks with due date: Show if due_at <= end of today
+            - Recurring tasks: Show if due_at <= end of today (existing behavior)
         """
+        due_at_str = chore.get("due_at")
         if not due_at_str:
             return False
 
@@ -94,13 +100,20 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not due_date:
                 return False
 
+            # Check if this is a one-time task
+            schedule_type = chore.get("chore", {}).get("schedule_type")
+
+            # One-time tasks without due dates have year 9999 (sentinel value)
+            if schedule_type == "one_time" and due_date.year == 9999:
+                return True  # No due date, always show
+
             # Get end of today (23:59:59) in local timezone
             now = dt_util.now()
             end_of_today = now.replace(
                 hour=23, minute=59, second=59, microsecond=999999
             )
 
-            # Compare
+            # Compare for both one-time with real dates and recurring tasks
             return due_date <= end_of_today
 
         except (ValueError, TypeError) as err:
@@ -150,8 +163,8 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         filtered = []
         for chore in chores:
-            # Check if chore is due by today
-            if self._is_due_today(chore.get("due_at")):
+            # Check if chore is due by today (pass full chore dict for schedule_type)
+            if self._is_due_today(chore):
                 # Normalize datetime fields
                 if "due_at" in chore:
                     chore["due_at"] = self._normalize_datetime(chore["due_at"])
