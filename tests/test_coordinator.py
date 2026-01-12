@@ -358,7 +358,6 @@ async def test_coordinator_extracts_pool_chores(hass, mock_choreboard_api):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_one_time_no_due_date(hass):
     """Test _is_due_today returns True for one-time tasks with year 9999 (no due date)."""
     entry = MockConfigEntry(
@@ -374,6 +373,7 @@ async def test_is_due_today_with_one_time_no_due_date(hass):
 
     # One-time task without due date has year 9999
     from datetime import datetime
+
     year_9999_date = datetime(9999, 12, 31, 0, 0, 0)
     due_at_str = year_9999_date.isoformat()
 
@@ -390,7 +390,6 @@ async def test_is_due_today_with_one_time_no_due_date(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_one_time_due_today(hass):
     """Test _is_due_today returns True for one-time tasks due today."""
     entry = MockConfigEntry(
@@ -421,7 +420,6 @@ async def test_is_due_today_with_one_time_due_today(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_one_time_due_tomorrow(hass):
     """Test _is_due_today returns False for one-time tasks due tomorrow."""
     entry = MockConfigEntry(
@@ -452,7 +450,6 @@ async def test_is_due_today_with_one_time_due_tomorrow(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_is_due_today_with_one_time_overdue(hass):
     """Test _is_due_today returns True for overdue one-time tasks."""
     entry = MockConfigEntry(
@@ -483,7 +480,6 @@ async def test_is_due_today_with_one_time_overdue(hass):
 
 
 @pytest.mark.asyncio
-@pytest.mark.enable_socket
 async def test_filter_chores_by_due_date_with_one_time_tasks(hass):
     """Test _filter_chores_by_due_date with mixed one-time and recurring tasks."""
     entry = MockConfigEntry(
@@ -501,6 +497,7 @@ async def test_filter_chores_by_due_date_with_one_time_tasks(hass):
     tomorrow = today + timedelta(days=1)
     yesterday = today - timedelta(days=1)
     from datetime import datetime
+
     year_9999_date = datetime(9999, 12, 31, 0, 0, 0)
 
     chores = [
