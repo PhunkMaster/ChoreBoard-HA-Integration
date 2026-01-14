@@ -302,6 +302,38 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                 )
                                 # Don't fail the entire update if arcade status fails
 
+            # Also fetch pending arcade approvals (sessions awaiting judgment)
+            # This ensures sessions that are "stopped" or "judging" still appear
+            # in sensor attributes even if has_active_session is false
+            try:
+                pending_approvals = await self.api_client.get_pending_arcade_approvals()
+                for pending in pending_approvals:
+                    pending_username = pending.get("user_name")
+                    # Only include if this user is monitored and doesn't already have a session
+                    if pending_username in self.monitored_users and pending_username not in arcade_sessions:
+                        # Find user ID by username
+                        user = next(
+                            (u for u in users if u.get("username") == pending_username), None
+                        )
+                        if user:
+                            user_id = user.get("id")
+                            arcade_sessions[pending_username] = {
+                                "id": pending.get("session_id") or pending.get("id"),
+                                "chore_id": pending.get("instance_id") or pending.get("chore_id"),
+                                "chore_name": pending.get("chore_name"),
+                                "user_id": user_id,
+                                "user_name": pending_username,
+                                "start_time": pending.get("started_at") or pending.get("start_time"),
+                                "elapsed_seconds": pending.get("elapsed_seconds", 0),
+                                "status": pending.get("status", "judging"),
+                            }
+            except ChoreboardAPIError as err:
+                _LOGGER.debug(
+                    "Failed to fetch pending arcade approvals: %s",
+                    err,
+                )
+                # Don't fail the entire update if pending approvals fetch fails
+
             data = {
                 "outstanding_chores": outstanding_chores,
                 "late_chores": late_chores,
