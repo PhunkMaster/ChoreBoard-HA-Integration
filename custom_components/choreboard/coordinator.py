@@ -308,25 +308,29 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 pending_approvals = await self.api_client.get_pending_arcade_approvals()
                 for pending in pending_approvals:
-                    pending_username = pending.get("user_name")
+                    # Backend returns nested user and chore objects
+                    user_data = pending.get("user", {})
+                    chore_data = pending.get("chore", {})
+                    pending_username = user_data.get("username")
+
                     # Only include if this user is monitored and doesn't already have a session
-                    if pending_username in self.monitored_users and pending_username not in arcade_sessions:
-                        # Find user ID by username
-                        user = next(
-                            (u for u in users if u.get("username") == pending_username), None
+                    if pending_username and pending_username in self.monitored_users and pending_username not in arcade_sessions:
+                        arcade_sessions[pending_username] = {
+                            "id": pending.get("session_id"),
+                            "chore_id": chore_data.get("id"),
+                            "chore_name": chore_data.get("name"),
+                            "user_id": user_data.get("id"),
+                            "user_name": pending_username,
+                            "start_time": pending.get("started_at"),
+                            "elapsed_seconds": pending.get("elapsed_seconds", 0),
+                            "status": pending.get("status", "judging"),
+                        }
+                        _LOGGER.debug(
+                            "Added pending arcade session for %s: chore_id=%s, status=%s",
+                            pending_username,
+                            chore_data.get("id"),
+                            pending.get("status"),
                         )
-                        if user:
-                            user_id = user.get("id")
-                            arcade_sessions[pending_username] = {
-                                "id": pending.get("session_id") or pending.get("id"),
-                                "chore_id": pending.get("instance_id") or pending.get("chore_id"),
-                                "chore_name": pending.get("chore_name"),
-                                "user_id": user_id,
-                                "user_name": pending_username,
-                                "start_time": pending.get("started_at") or pending.get("start_time"),
-                                "elapsed_seconds": pending.get("elapsed_seconds", 0),
-                                "status": pending.get("status", "judging"),
-                            }
             except ChoreboardAPIError as err:
                 _LOGGER.debug(
                     "Failed to fetch pending arcade approvals: %s",
