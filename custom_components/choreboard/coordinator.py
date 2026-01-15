@@ -305,6 +305,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Also fetch pending arcade approvals (sessions awaiting judgment)
             # This ensures sessions that are "stopped" or "judging" still appear
             # in sensor attributes even if has_active_session is false
+            pending_arcade_sessions = []
             try:
                 pending_approvals = await self.api_client.get_pending_arcade_approvals()
                 for pending in pending_approvals:
@@ -313,7 +314,20 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     chore_data = pending.get("chore", {})
                     pending_username = user_data.get("username")
 
-                    # Only include if this user is monitored and doesn't already have a session
+                    # Store ALL pending sessions for the dedicated sensor (unfiltered)
+                    pending_arcade_sessions.append({
+                        "id": pending.get("session_id"),
+                        "chore_id": chore_data.get("id"),
+                        "chore_name": chore_data.get("name"),
+                        "user_id": user_data.get("id"),
+                        "user_name": pending_username,
+                        "user_display_name": user_data.get("display_name", pending_username),
+                        "start_time": pending.get("started_at"),
+                        "elapsed_seconds": pending.get("elapsed_seconds", 0),
+                        "status": pending.get("status", "judging"),
+                    })
+
+                    # Only include in arcade_sessions if this user is monitored and doesn't already have a session
                     if pending_username and pending_username in self.monitored_users and pending_username not in arcade_sessions:
                         arcade_sessions[pending_username] = {
                             "id": pending.get("session_id"),
@@ -326,11 +340,16 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             "status": pending.get("status", "judging"),
                         }
                         _LOGGER.debug(
-                            "Added pending arcade session for %s: chore_id=%s, status=%s",
+                            "Added pending arcade session for monitored user %s: chore_id=%s, status=%s",
                             pending_username,
                             chore_data.get("id"),
                             pending.get("status"),
                         )
+
+                _LOGGER.debug(
+                    "Fetched %d total pending arcade sessions",
+                    len(pending_arcade_sessions),
+                )
             except ChoreboardAPIError as err:
                 _LOGGER.debug(
                     "Failed to fetch pending arcade approvals: %s",
@@ -350,6 +369,7 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "leaderboard_alltime": leaderboard_alltime,
                 "my_chores": my_chores_data,
                 "arcade_sessions": arcade_sessions,
+                "pending_arcade_sessions": pending_arcade_sessions,
             }
 
             _LOGGER.debug(

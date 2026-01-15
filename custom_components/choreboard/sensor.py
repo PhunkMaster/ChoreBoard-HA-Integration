@@ -67,6 +67,7 @@ async def async_setup_entry(
     entities.append(ChoreboardPoolSensor(coordinator))
     entities.append(ChoreboardChoreBreakdownSensor(coordinator))
     entities.append(ChoreboardCompletionHistorySensor(coordinator))
+    entities.append(ChoreboardPendingArcadeSensor(coordinator))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "weekly"))
     entities.append(ChoreboardLeaderboardSensor(coordinator, "alltime"))
     entities.append(ChoreboardUsersSensor(coordinator))
@@ -432,6 +433,53 @@ class ChoreboardCompletionHistorySensor(
         return {
             "completions": completion_list,
             "count": len(completions),
+            "points_label": self.coordinator.data.get("points_label", "points"),
+        }
+
+
+class ChoreboardPendingArcadeSensor(
+    CoordinatorEntity[ChoreboardCoordinator], SensorEntity
+):
+    """Sensor for pending arcade sessions awaiting judge approval."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:gavel"
+
+    def __init__(self, coordinator: ChoreboardCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_pending_arcade"
+        self._attr_name = "Pending Arcade Sessions"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of pending arcade sessions."""
+        sessions = self.coordinator.data.get("pending_arcade_sessions", [])
+        return len(sessions)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        sessions = self.coordinator.data.get("pending_arcade_sessions", [])
+
+        session_list = []
+        for session in sessions:
+            session_info = {
+                "id": session.get("id"),
+                "chore_id": session.get("chore_id"),
+                "chore_name": session.get("chore_name", "Unknown"),
+                "user_id": session.get("user_id"),
+                "user_name": session.get("user_name", "Unknown"),
+                "user_display_name": session.get("user_display_name", session.get("user_name", "Unknown")),
+                "start_time": session.get("start_time"),
+                "elapsed_seconds": session.get("elapsed_seconds", 0),
+                "status": session.get("status", "judging"),
+            }
+            session_list.append(session_info)
+
+        return {
+            "sessions": session_list,
+            "count": len(sessions),
             "points_label": self.coordinator.data.get("points_label", "points"),
         }
 
