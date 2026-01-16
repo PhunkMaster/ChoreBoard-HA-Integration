@@ -135,6 +135,29 @@ async def test_chore_leaderboard_sensor(hass: HomeAssistant, setup_integration):
 
 @pytest.mark.asyncio
 @pytest.mark.enable_socket
+async def test_pending_arcade_sensor(hass: HomeAssistant, setup_integration):
+    """Test pending arcade sessions sensor."""
+    state = hass.states.get("sensor.pending_arcade_sessions")
+    assert state is not None
+    assert state.state == "1"  # One pending session in mock data
+
+    # Check attributes
+    assert "sessions" in state.attributes
+    assert len(state.attributes["sessions"]) == 1
+
+    session = state.attributes["sessions"][0]
+    assert session["id"] == 1
+    assert session["chore_id"] == 1
+    assert session["chore_name"] == "Speed Chore"
+    assert session["user_id"] == 1
+    assert session["user_name"] == "testuser"
+    assert session["user_display_name"] == "Test User"
+    assert session["elapsed_seconds"] == 45
+    assert session["status"] == "judging"
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_completion_information_in_chores(hass: HomeAssistant, setup_integration):
     """Test that completion information is included in chore data."""
     # Check outstanding chores sensor
@@ -208,15 +231,53 @@ async def test_sensor_unit_of_measurement(hass: HomeAssistant, setup_integration
 
 @pytest.mark.asyncio
 @pytest.mark.enable_socket
-async def test_all_sensors_have_users_array(hass: HomeAssistant, setup_integration):
-    """Test that all ChoreBoard sensors include users array for card compatibility."""
-    # List of all sensor entity IDs to test
+async def test_users_sensor_has_users_array(hass: HomeAssistant, setup_integration):
+    """Test that the users sensor includes users array."""
+    state = hass.states.get("sensor.users")
+    assert state is not None, "Sensor sensor.users not found"
+
+    # Check for users array
+    assert "users" in state.attributes, "Users sensor missing users array"
+
+    # Get the users array
+    users_array = state.attributes.get("users")
+
+    # Verify users array structure
+    assert isinstance(users_array, list), "Users array is not a list"
+    assert len(users_array) > 0, "Users array is empty"
+
+    # Check first user has required fields
+    user = users_array[0]
+    assert "id" in user, "User missing 'id' field"
+    assert "username" in user, "User missing 'username' field"
+    assert "display_name" in user, "User missing 'display_name' field"
+    assert "weekly_points" in user, "User missing 'weekly_points' field"
+    assert "all_time_points" in user, "User missing 'all_time_points' field"
+
+    # Verify field types
+    assert isinstance(user["id"], int), "User id is not an integer"
+    assert isinstance(user["username"], str), "User username is not a string"
+    assert isinstance(user["display_name"], str), "User display_name is not a string"
+    assert isinstance(user["weekly_points"], str), "User weekly_points is not a string"
+    assert isinstance(user["all_time_points"], str), (
+        "User all_time_points is not a string"
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
+async def test_chore_sensors_do_not_have_users_array(
+    hass: HomeAssistant, setup_integration
+):
+    """Test that chore sensors do NOT include users array."""
+    # List of sensor entity IDs that should NOT have users attribute
     sensor_ids = [
         "sensor.outstanding_chores",
         "sensor.late_chores",
         "sensor.pool_chores",
         "sensor.chore_breakdown",
         "sensor.completion_history",
+        "sensor.pending_arcade_sessions",
         "sensor.testuser_my_chores",
         "sensor.testuser_my_immediate_chores",
         "sensor.leaderboard_weekly",
@@ -224,59 +285,18 @@ async def test_all_sensors_have_users_array(hass: HomeAssistant, setup_integrati
         "sensor.arcade_speed_chore",
         "sensor.testuser_weekly_points",
         "sensor.testuser_all_time_points",
-        "sensor.users",
     ]
 
     for sensor_id in sensor_ids:
         state = hass.states.get(sensor_id)
         assert state is not None, f"Sensor {sensor_id} not found"
 
-        # Check for users array (or all_users for leaderboard sensors)
-        has_users = "users" in state.attributes
-        has_all_users = "all_users" in state.attributes
-
-        assert has_users or has_all_users, (
-            f"Sensor {sensor_id} missing users/all_users array"
+        # Check that users array is NOT present (all_users is also not allowed)
+        assert "users" not in state.attributes, (
+            f"Sensor {sensor_id} should not have users array"
         )
-
-        # Get the users array (prefer all_users for leaderboard sensors)
-        users_array = state.attributes.get("all_users") or state.attributes.get("users")
-
-        # Verify users array structure
-        assert isinstance(users_array, list), (
-            f"Sensor {sensor_id} users array is not a list"
-        )
-        assert len(users_array) > 0, f"Sensor {sensor_id} users array is empty"
-
-        # Check first user has required fields
-        user = users_array[0]
-        assert "id" in user, f"Sensor {sensor_id} user missing 'id' field"
-        assert "username" in user, f"Sensor {sensor_id} user missing 'username' field"
-        assert "display_name" in user, (
-            f"Sensor {sensor_id} user missing 'display_name' field"
-        )
-        assert "weekly_points" in user, (
-            f"Sensor {sensor_id} user missing 'weekly_points' field"
-        )
-        assert "all_time_points" in user, (
-            f"Sensor {sensor_id} user missing 'all_time_points' field"
-        )
-
-        # Verify field types
-        assert isinstance(user["id"], int), (
-            f"Sensor {sensor_id} user id is not an integer"
-        )
-        assert isinstance(user["username"], str), (
-            f"Sensor {sensor_id} user username is not a string"
-        )
-        assert isinstance(user["display_name"], str), (
-            f"Sensor {sensor_id} user display_name is not a string"
-        )
-        assert isinstance(user["weekly_points"], str), (
-            f"Sensor {sensor_id} user weekly_points is not a string"
-        )
-        assert isinstance(user["all_time_points"], str), (
-            f"Sensor {sensor_id} user all_time_points is not a string"
+        assert "all_users" not in state.attributes, (
+            f"Sensor {sensor_id} should not have all_users array"
         )
 
 

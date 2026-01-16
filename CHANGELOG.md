@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Pending Arcade Sessions Sensor** (`sensor.choreboard_pending_arcade`)
+  - New dedicated sensor showing ALL arcade sessions awaiting judge approval
+  - Unfiltered by monitored users - accessible to any judge
+  - State: Count of pending sessions
+  - Attributes: List of sessions with id, chore info, user info, elapsed time, status
+  - Enables judges to see all pending arcade sessions regardless of monitored user settings
+
+### Changed
+- **BREAKING CHANGE**: Removed `users` array from all sensor attributes except `sensor.choreboard_users`
+  - The `users` array is now only available in the dedicated Users sensor (`sensor.choreboard_users`)
+  - All other sensors (Outstanding, Late, Pool, My Chores, etc.) no longer include the `users` attribute
+  - This change reduces data duplication across sensors and improves performance
+  - **Migration**: If you reference the `users` attribute from chore sensors in automations or custom cards, update them to query `sensor.choreboard_users` attributes instead
+  - **Impact**: ChoreBoard Card may need updates to fetch users from the dedicated users sensor
+
 ## [1.4.6] - 2025-12-17
 
 ### Changed

@@ -10,7 +10,7 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 **Domain**: `choreboard`
 
 **Feature Completeness**:
-- 12 sensor types (8 system-wide, 4 per-user)
+- 13 sensor types (9 system-wide, 4 per-user)
 - 9 services (3 core + 6 arcade mode)
 - HMAC-SHA256 authentication with 23-hour token caching
 - Two-step configuration flow with 3-method user discovery
@@ -68,7 +68,7 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 
 ### Users Array Standard
 
-**All 12 sensors** include `users` array in `extra_state_attributes` for ChoreBoard Card compatibility.
+**Only the `ChoreboardUsersSensor`** includes the `users` array in `extra_state_attributes`. Other sensors do not include user data to reduce data duplication.
 
 **Structure**:
 ```python
@@ -87,19 +87,22 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 
 **Helper Function**: `format_users_for_attributes()` (`sensor.py:20-51`)
 
+**Important**: To access user data, query the `sensor.choreboard_users` sensor attributes.
+
 ## 4. Sensor Reference
 
-### System-Wide Sensors (8 sensors)
+### System-Wide Sensors (9 sensors)
 
 | Class | Entity ID | State | Key Attributes |
 |-------|-----------|-------|----------------|
-| `ChoreboardOutstandingSensor` | `sensor.choreboard_outstanding` | count | chores (list), users (array) |
-| `ChoreboardLateSensor` | `sensor.choreboard_late` | count | chores (list), users (array) |
-| `ChoreboardPoolSensor` | `sensor.choreboard_pool` | count | chores (list), users (array) |
-| `ChoreboardChoreBreakdownSensor` | `sensor.choreboard_chore_breakdown` | count | breakdown (dict), users (array) |
-| `ChoreboardCompletionHistorySensor` | `sensor.choreboard_completion_history` | count | completions (20 max), users (array) |
-| `ChoreboardLeaderboardSensor` | `sensor.choreboard_leaderboard_{type}` | count | all_users (ranked list) |
-| `ChoreboardChoreLeaderboardSensor` | `sensor.choreboard_arcade_{chore_name}` | count | rankings (list), users (array) |
+| `ChoreboardOutstandingSensor` | `sensor.choreboard_outstanding` | count | chores (list) |
+| `ChoreboardLateSensor` | `sensor.choreboard_late` | count | chores (list) |
+| `ChoreboardPoolSensor` | `sensor.choreboard_pool` | count | chores (list) |
+| `ChoreboardChoreBreakdownSensor` | `sensor.choreboard_chore_breakdown` | count | breakdown (dict) |
+| `ChoreboardCompletionHistorySensor` | `sensor.choreboard_completion_history` | count | completions (20 max) |
+| `ChoreboardPendingArcadeSensor` | `sensor.choreboard_pending_arcade` | count | sessions (list) |
+| `ChoreboardLeaderboardSensor` | `sensor.choreboard_leaderboard_{type}` | count | users (ranked list) |
+| `ChoreboardChoreLeaderboardSensor` | `sensor.choreboard_arcade_{chore_name}` | count | scores (list) |
 | `ChoreboardUsersSensor` | `sensor.choreboard_users` | count | users (array), count (int) |
 
 **Note**: `{type}` = `weekly` or `alltime` for leaderboard sensors. Arcade leaderboard sensors created dynamically per chore.
@@ -108,10 +111,10 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 
 | Class | Entity ID | State | Key Attributes |
 |-------|-----------|-------|----------------|
-| `ChoreboardMyChoresSensor` | `sensor.{username}_my_chores` | count | chores (list), users (array) |
-| `ChoreboardMyImmediateChoresSensor` | `sensor.{username}_my_immediate_chores` | count | chores (filtered), users (array) |
-| `ChoreboardUserWeeklyPointsSensor` | `sensor.{username}_weekly_points` | points | username, rank, users (array) |
-| `ChoreboardUserAllTimePointsSensor` | `sensor.{username}_alltime_points` | points | username, rank, users (array) |
+| `ChoreboardMyChoresSensor` | `sensor.{username}_my_chores` | count | chores (list) |
+| `ChoreboardMyImmediateChoresSensor` | `sensor.{username}_my_immediate_chores` | count | chores (filtered) |
+| `ChoreboardUserWeeklyPointsSensor` | `sensor.{username}_weekly_points` | points | username, points |
+| `ChoreboardUserAllTimePointsSensor` | `sensor.{username}_alltime_points` | points | username, points |
 
 **My Immediate Chores**: Filters out chores where `complete_later=True`
 
@@ -155,6 +158,12 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 **Leaderboard Sensors**: `ChoreboardChoreLeaderboardSensor` created per chore with arcade mode enabled
 - Entity ID: `sensor.choreboard_arcade_{chore_name}`
 - Tracks high scores (fastest completion times)
+
+**Pending Arcade Sensor**: `ChoreboardPendingArcadeSensor` shows ALL arcade sessions awaiting judge approval
+- Entity ID: `sensor.choreboard_pending_arcade`
+- Unfiltered by monitored users - shows all pending sessions for any judge
+- State: Count of pending sessions
+- Attributes: List of sessions with id, chore info, user info, elapsed time, status
 
 **Judge System**: Requires judge approval for completion, supports optional notes, `judge_id` parameter required
 
@@ -210,7 +219,8 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 - Date filtering logic (`test_coordinator.py`)
 - Datetime normalization
 - Pool chore detection
-- Users array in all 12 sensors (`test_sensors_new.py`)
+- Users array in ChoreboardUsersSensor only (`test_sensors_new.py`)
+- Absence of users array in other sensors (`test_sensors_new.py`)
 - Service handlers (`test_services.py`)
 - Arcade mode workflow
 - 3-method user discovery
