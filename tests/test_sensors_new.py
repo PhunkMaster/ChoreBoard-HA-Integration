@@ -259,9 +259,9 @@ async def test_users_sensor_has_users_array(hass: HomeAssistant, setup_integrati
     assert isinstance(user["username"], str), "User username is not a string"
     assert isinstance(user["display_name"], str), "User display_name is not a string"
     assert isinstance(user["weekly_points"], str), "User weekly_points is not a string"
-    assert isinstance(
-        user["all_time_points"], str
-    ), "User all_time_points is not a string"
+    assert isinstance(user["all_time_points"], str), (
+        "User all_time_points is not a string"
+    )
 
 
 @pytest.mark.asyncio
@@ -292,12 +292,12 @@ async def test_chore_sensors_do_not_have_users_array(
         assert state is not None, f"Sensor {sensor_id} not found"
 
         # Check that users array is NOT present (all_users is also not allowed)
-        assert (
-            "users" not in state.attributes
-        ), f"Sensor {sensor_id} should not have users array"
-        assert (
-            "all_users" not in state.attributes
-        ), f"Sensor {sensor_id} should not have all_users array"
+        assert "users" not in state.attributes, (
+            f"Sensor {sensor_id} should not have users array"
+        )
+        assert "all_users" not in state.attributes, (
+            f"Sensor {sensor_id} should not have all_users array"
+        )
 
 
 @pytest.mark.asyncio
