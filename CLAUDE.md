@@ -10,7 +10,7 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 **Domain**: `choreboard`
 
 **Feature Completeness**:
-- 12 sensor types (8 system-wide, 4 per-user)
+- 13 sensor types (9 system-wide, 4 per-user)
 - 9 services (3 core + 6 arcade mode)
 - HMAC-SHA256 authentication with 23-hour token caching
 - Two-step configuration flow with 3-method user discovery
@@ -91,7 +91,7 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 
 ## 4. Sensor Reference
 
-### System-Wide Sensors (8 sensors)
+### System-Wide Sensors (9 sensors)
 
 | Class | Entity ID | State | Key Attributes |
 |-------|-----------|-------|----------------|
@@ -100,6 +100,7 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 | `ChoreboardPoolSensor` | `sensor.choreboard_pool` | count | chores (list) |
 | `ChoreboardChoreBreakdownSensor` | `sensor.choreboard_chore_breakdown` | count | breakdown (dict) |
 | `ChoreboardCompletionHistorySensor` | `sensor.choreboard_completion_history` | count | completions (20 max) |
+| `ChoreboardPendingArcadeSensor` | `sensor.choreboard_pending_arcade` | count | sessions (list) |
 | `ChoreboardLeaderboardSensor` | `sensor.choreboard_leaderboard_{type}` | count | users (ranked list) |
 | `ChoreboardChoreLeaderboardSensor` | `sensor.choreboard_arcade_{chore_name}` | count | scores (list) |
 | `ChoreboardUsersSensor` | `sensor.choreboard_users` | count | users (array), count (int) |
@@ -157,6 +158,12 @@ This file provides guidance to Claude Code when working with the ChoreBoard Home
 **Leaderboard Sensors**: `ChoreboardChoreLeaderboardSensor` created per chore with arcade mode enabled
 - Entity ID: `sensor.choreboard_arcade_{chore_name}`
 - Tracks high scores (fastest completion times)
+
+**Pending Arcade Sensor**: `ChoreboardPendingArcadeSensor` shows ALL arcade sessions awaiting judge approval
+- Entity ID: `sensor.choreboard_pending_arcade`
+- Unfiltered by monitored users - shows all pending sessions for any judge
+- State: Count of pending sessions
+- Attributes: List of sessions with id, chore info, user info, elapsed time, status
 
 **Judge System**: Requires judge approval for completion, supports optional notes, `judge_id` parameter required
 
