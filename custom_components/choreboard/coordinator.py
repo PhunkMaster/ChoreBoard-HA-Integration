@@ -315,20 +315,28 @@ class ChoreboardCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     pending_username = user_data.get("username")
 
                     # Store ALL pending sessions for the dedicated sensor (unfiltered)
-                    pending_arcade_sessions.append({
-                        "id": pending.get("session_id"),
-                        "chore_id": chore_data.get("id"),
-                        "chore_name": chore_data.get("name"),
-                        "user_id": user_data.get("id"),
-                        "user_name": pending_username,
-                        "user_display_name": user_data.get("display_name", pending_username),
-                        "start_time": pending.get("started_at"),
-                        "elapsed_seconds": pending.get("elapsed_seconds", 0),
-                        "status": pending.get("status", "judging"),
-                    })
+                    pending_arcade_sessions.append(
+                        {
+                            "id": pending.get("session_id"),
+                            "chore_id": chore_data.get("id"),
+                            "chore_name": chore_data.get("name"),
+                            "user_id": user_data.get("id"),
+                            "user_name": pending_username,
+                            "user_display_name": user_data.get(
+                                "display_name", pending_username
+                            ),
+                            "start_time": pending.get("started_at"),
+                            "elapsed_seconds": pending.get("elapsed_seconds", 0),
+                            "status": pending.get("status", "judging"),
+                        }
+                    )
 
                     # Only include in arcade_sessions if this user is monitored and doesn't already have a session
-                    if pending_username and pending_username in self.monitored_users and pending_username not in arcade_sessions:
+                    if (
+                        pending_username
+                        and pending_username in self.monitored_users
+                        and pending_username not in arcade_sessions
+                    ):
                         arcade_sessions[pending_username] = {
                             "id": pending.get("session_id"),
                             "chore_id": chore_data.get("id"),

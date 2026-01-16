@@ -470,7 +470,9 @@ class ChoreboardPendingArcadeSensor(
                 "chore_name": session.get("chore_name", "Unknown"),
                 "user_id": session.get("user_id"),
                 "user_name": session.get("user_name", "Unknown"),
-                "user_display_name": session.get("user_display_name", session.get("user_name", "Unknown")),
+                "user_display_name": session.get(
+                    "user_display_name", session.get("user_name", "Unknown")
+                ),
                 "start_time": session.get("start_time"),
                 "elapsed_seconds": session.get("elapsed_seconds", 0),
                 "status": session.get("status", "judging"),
@@ -699,7 +701,7 @@ class ChoreboardLeaderboardSensor(
 
         return {
             "type": self._leaderboard_type,
-            "users": user_list,
+            "leaderboard": user_list,
             "count": len(leaderboard),
             "points_label": self.coordinator.data.get("points_label", "points"),
         }
