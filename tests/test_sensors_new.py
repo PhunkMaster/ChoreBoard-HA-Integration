@@ -135,6 +135,29 @@ async def test_chore_leaderboard_sensor(hass: HomeAssistant, setup_integration):
 
 @pytest.mark.asyncio
 @pytest.mark.enable_socket
+async def test_pending_arcade_sensor(hass: HomeAssistant, setup_integration):
+    """Test pending arcade sessions sensor."""
+    state = hass.states.get("sensor.pending_arcade_sessions")
+    assert state is not None
+    assert state.state == "1"  # One pending session in mock data
+
+    # Check attributes
+    assert "sessions" in state.attributes
+    assert len(state.attributes["sessions"]) == 1
+
+    session = state.attributes["sessions"][0]
+    assert session["id"] == 1
+    assert session["chore_id"] == 1
+    assert session["chore_name"] == "Speed Chore"
+    assert session["user_id"] == 1
+    assert session["user_name"] == "testuser"
+    assert session["user_display_name"] == "Test User"
+    assert session["elapsed_seconds"] == 45
+    assert session["status"] == "judging"
+
+
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_completion_information_in_chores(hass: HomeAssistant, setup_integration):
     """Test that completion information is included in chore data."""
     # Check outstanding chores sensor
@@ -250,6 +273,7 @@ async def test_chore_sensors_do_not_have_users_array(hass: HomeAssistant, setup_
         "sensor.pool_chores",
         "sensor.chore_breakdown",
         "sensor.completion_history",
+        "sensor.pending_arcade_sessions",
         "sensor.testuser_my_chores",
         "sensor.testuser_my_immediate_chores",
         "sensor.leaderboard_weekly",

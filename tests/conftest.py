@@ -7,6 +7,12 @@ from unittest.mock import patch
 import pytest
 
 
+# Disable pytest-socket entirely as it conflicts with Home Assistant's asyncio requirements
+def pytest_configure(config):
+    """Disable pytest-socket plugin."""
+    config.pluginmanager.set_blocked("socket")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def socket_enabled():
     """Enable socket connections for all tests."""
@@ -99,8 +105,11 @@ def mock_choreboard_api():
                     "id": 1,
                     "username": "testuser",
                     "display_name": "Test User",
-                    "weekly_points": 100,
-                    "all_time_points": 500,
+                    "first_name": "Test",
+                    "can_be_assigned": True,
+                    "eligible_for_points": True,
+                    "weekly_points": "100",
+                    "all_time_points": "500",
                     "claims_today": 2,
                 }
             ],
@@ -188,5 +197,19 @@ def mock_choreboard_api():
                     }
                 ]
             },
+            "pending_arcade_sessions": [
+                {
+                    "id": 1,
+                    "chore_id": 1,
+                    "chore_name": "Speed Chore",
+                    "user_id": 1,
+                    "user_name": "testuser",
+                    "user_display_name": "Test User",
+                    "start_time": "2025-12-15T09:00:00Z",
+                    "elapsed_seconds": 45,
+                    "status": "judging",
+                }
+            ],
+            "arcade_sessions": {},
         }
         yield mock_update
