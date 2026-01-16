@@ -7,12 +7,6 @@ from unittest.mock import patch
 import pytest
 
 
-# Disable pytest-socket entirely as it conflicts with Home Assistant's asyncio requirements
-def pytest_configure(config):
-    """Disable pytest-socket plugin."""
-    config.pluginmanager.set_blocked("socket")
-
-
 @pytest.fixture(scope="session", autouse=True)
 def socket_enabled():
     """Enable socket connections for all tests."""
